@@ -7,19 +7,17 @@ use Illuminate\Support\Facades\Hash;
 
 class LoginService
 {
-    public function attemptLogin(array $credentials): array|null
+    public function attemptLogin(array $credentials): ?User
     {
         $user = User::where('email', $credentials['email'])->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return null;
         }
 
-        $token = $user->createToken('Token Akses')->accessToken;
+        // Tambahkan token sebagai atribut sementara
+        $user->token = $user->createToken('API Token')->accessToken;
 
-        return [
-            'user' => $user,
-            'token' => $token,
-        ];
+        return $user; 
     }
 }
