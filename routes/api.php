@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\FixedScheduleController;
 
 
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [RegisterController::class, 'register']); // default role karyawan
+    Route::post('/register', [RegisterController::class, 'register']); 
     Route::post('/login', [LoginController::class, 'login']);
     Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth:api');
     Route::get('/me', function (Request $request) {
