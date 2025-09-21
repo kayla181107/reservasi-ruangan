@@ -15,16 +15,15 @@ class UpdateRoomRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'        => [
+            'name' => [
                 'sometimes',
                 'string',
                 'max:100',
                 Rule::unique('rooms', 'name')->ignore($this->route('id')), 
-                // pastikan sesuai parameter route api.php {id}
+                // pastikan parameter route pakai {id} di api.php
             ],
-            'capacity'    => 'sometimes|integer|min:1',
-            'location'    => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:500',
+            'capacity'    => 'sometimes|nullable|integer|min:1',
+            'description' => 'sometimes|nullable|string|max:500',
             'status'      => 'sometimes|in:active,inactive',
         ];
     }
@@ -32,10 +31,10 @@ class UpdateRoomRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.unique'     => 'Nama ruangan sudah digunakan.',
-            'capacity.integer'=> 'Kapasitas harus angka.',
-            'capacity.min'    => 'Kapasitas minimal 1.',
-            'status.in'       => 'Status hanya boleh active/inactive.',
+            'name.unique'       => 'Nama ruangan sudah digunakan.',
+            'capacity.integer'  => 'Kapasitas harus berupa angka.',
+            'capacity.min'      => 'Kapasitas minimal 1.',
+            'status.in'         => 'Status hanya boleh active atau inactive.',
         ];
     }
 }

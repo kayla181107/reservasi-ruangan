@@ -16,9 +16,9 @@ class UpdateReservationRequest extends FormRequest
         return [
             'room_id'    => 'sometimes|exists:rooms,id',
             'user_id'    => 'sometimes|exists:users,id',
-            'start_time' => 'sometimes|date|after_or_equal:now',
-            'end_time'   => 'sometimes|date|after:start_time',
-            'purpose'    => 'sometimes|string|max:255',
+            'date'       => 'sometimes|date|after_or_equal:today',
+            'start_time' => 'sometimes|date_format:H:i',
+            'end_time'   => 'sometimes|date_format:H:i|after:start_time',
             'status'     => 'sometimes|in:pending,approved,rejected,canceled',
             'reason'     => 'nullable|string|max:500',
         ];
@@ -27,11 +27,14 @@ class UpdateReservationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'room_id.exists'    => 'Room tidak valid.',
-            'user_id.exists'    => 'User tidak valid.',
-            'start_time.after_or_equal' => 'Waktu mulai minimal sekarang.',
-            'end_time.after'    => 'Waktu selesai harus setelah mulai.',
-            'status.in'         => 'Status tidak valid.',
+            'room_id.exists'          => 'Room tidak valid.',
+            'user_id.exists'          => 'User tidak valid.',
+            'date.date'               => 'Tanggal harus valid.',
+            'date.after_or_equal'     => 'Tanggal minimal hari ini.',
+            'start_time.date_format'  => 'Format waktu mulai harus HH:MM.',
+            'end_time.date_format'    => 'Format waktu selesai harus HH:MM.',
+            'end_time.after'          => 'Waktu selesai harus setelah waktu mulai.',
+            'status.in'               => 'Status tidak valid.',
         ];
     }
 }

@@ -8,30 +8,39 @@ class StoreReservationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Bisa pakai Gate/Policy kalau mau cek role user
+        return true; // Bisa pakai Gate/Policy kalau perlu cek role user
     }
 
     public function rules(): array
     {
         return [
-            'room_id' => 'required|exists:rooms,id',
-            'user_id' => 'required|exists:users,id',
-            'start_time' => 'required|date|after_or_equal:now',
-            'end_time' => 'required|date|after:start_time',
-            'purpose' => 'required|string|max:255',
+            'user_id'    => 'required|exists:users,id',
+            'room_id'    => 'required|exists:rooms,id',
+            'date'       => 'required|date|after_or_equal:today',
+            'start_time' => 'required|date_format:H:i',
+            'end_time'   => 'required|date_format:H:i|after:start_time',
+            'status'     => 'in:pending,approved,rejected,canceled',
+            'reason'     => 'nullable|string',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'room_id.required' => 'Room wajib dipilih.',
-            'room_id.exists' => 'Room tidak valid.',
-            'user_id.required' => 'User wajib dipilih.',
-            'user_id.exists' => 'User tidak valid.',
-            'start_time.after_or_equal' => 'Waktu mulai minimal sekarang.',
-            'end_time.after' => 'Waktu selesai harus setelah mulai.',
-            'purpose.required' => 'Tujuan reservasi wajib diisi.',
+            'user_id.required'    => 'User wajib dipilih.',
+            'user_id.exists'      => 'User tidak valid.',
+            'room_id.required'    => 'Room wajib dipilih.',
+            'room_id.exists'      => 'Room tidak valid.',
+            'date.required'       => 'Tanggal wajib diisi.',
+            'date.date'           => 'Tanggal tidak valid.',
+            'date.after_or_equal' => 'Tanggal tidak boleh sebelum hari ini.',
+            'start_time.required' => 'Waktu mulai wajib diisi.',
+            'start_time.date_format' => 'Format waktu mulai harus HH:MM.',
+            'end_time.required'   => 'Waktu selesai wajib diisi.',
+            'end_time.date_format'=> 'Format waktu selesai harus HH:MM.',
+            'end_time.after'      => 'Waktu selesai harus setelah waktu mulai.',
+            'status.in'           => 'Status hanya boleh pending, approved, rejected, atau canceled.',
+            'reason.string'       => 'Alasan harus berupa teks.',
         ];
     }
 }
