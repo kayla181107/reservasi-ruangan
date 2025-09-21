@@ -14,6 +14,7 @@ class FixedScheduleResource extends JsonResource
     {
         return [
             'id'          => $this->id,
+            'room_id'     => $this->room_id,
             'room'        => new RoomResource($this->whenLoaded('room')),
             'day_of_week' => $this->day_of_week,
             'start_time'  => $this->start_time,

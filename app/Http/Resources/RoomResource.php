@@ -16,11 +16,10 @@ class RoomResource extends JsonResource
             'id'          => $this->id,
             'name'        => $this->name,
             'capacity'    => $this->capacity,
-            'location'    => $this->location,
             'description' => $this->description,
             'status'      => $this->status,
-            'created_at'  => $this->created_at ? $this->created_at->toDateTimeString() : null,
-            'updated_at'  => $this->updated_at ? $this->updated_at->toDateTimeString() : null,
+            'created_at'  => $this->created_at?->toDateTimeString(),
+            'updated_at'  => $this->updated_at?->toDateTimeString(),
         ];
     }
 }
