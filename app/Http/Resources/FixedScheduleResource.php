@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Karyawan;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\Karyawan\RoomResource;
 
 class FixedScheduleResource extends JsonResource
 {
@@ -20,8 +21,6 @@ class FixedScheduleResource extends JsonResource
             'start_time'  => $this->start_time,
             'end_time'    => $this->end_time,
             'description' => $this->description,
-            'created_at'  => $this->created_at ? $this->created_at->toDateTimeString() : null,
-            'updated_at'  => $this->updated_at ? $this->updated_at->toDateTimeString() : null,
         ];
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\Karyawan;
+namespace App\Http\Resources\Admin;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -11,7 +11,14 @@ class ReservationResource extends JsonResource
         return [
             'id'         => $this->id,
 
-            // relasi room (hanya id + name agar ringkas)
+            // relasi user
+            'user'       => [
+                'id'    => $this->user->id,
+                'name'  => $this->user->name,
+                'email' => $this->user->email,
+            ],
+
+            
             'room'       => [
                 'id'   => $this->room->id,
                 'name' => $this->room->name,
@@ -24,8 +31,9 @@ class ReservationResource extends JsonResource
             'status'     => $this->status,
             'reason'     => $this->reason,
 
-            // timestamp tetap ditampilkan
+            // timestamp
             'created_at' => $this->created_at->toDateTimeString(),
+            'updated_at' => $this->updated_at->toDateTimeString(),
         ];
     }
 }

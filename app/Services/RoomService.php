@@ -3,48 +3,60 @@
 namespace App\Services;
 
 use App\Models\Room;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Validation\ValidationException;
 
 class RoomService
 {
-    /**
-     * Get all rooms
-     */
-    public function getAll(): Collection
+    public function getAll()
     {
-        return Room::all();
+        return Room::with(['reservations', 'fixedSchedules'])->get();
     }
 
-    /**
-     * Find room by id
-     */
-    public function findById(int $id): ?Room
+    public function find($id)
     {
-        return Room::find($id);
+        return Room::with(['reservations.user', 'fixedSchedules'])->findOrFail($id);
     }
 
-    /**
-     * Create new room
-     */
-    public function create(array $data): Room
+    public function create(array $data)
     {
-        return Room::create($data);
+        return Room::create([
+            'name'        => $data['name'],
+            'capacity'    => $data['capacity'],
+            'description' => $data['description'] ?? null,
+            'status'      => $data['status'] ?? 'available',
+        ]);
     }
 
-    /**
-     * Update room
-     */
-    public function update(Room $room, array $data): Room
+    public function update($id, array $data)
     {
-        $room->update($data);
+        $room = Room::findOrFail($id);
+        $room->update([
+            'name'        => $data['name'],
+            'capacity'    => $data['capacity'],
+            'description' => $data['description'] ?? null,
+            'status'      => $data['status'] ?? $room->status,
+        ]);
         return $room;
     }
 
-    /**
-     * Delete room
-     */
-    public function delete(Room $room): bool
+    public function delete($id)
     {
+        $room = Room::findOrFail($id);
+
+        // cek reservasi aktif (pending/approved)
+        $activeReservation = $room->reservations()
+            ->whereIn('status', ['pending', 'approved'])
+            ->exists();
+
+        // cek fixed schedule aktif
+        $hasFixedSchedule = $room->fixedSchedules()->exists();
+
+        if ($activeReservation || $hasFixedSchedule) {
+            throw ValidationException::withMessages([
+                'room' => 'Ruangan tidak bisa dihapus karena masih memiliki reservasi aktif atau jadwal tetap.'
+            ]);
+        }
+
         return $room->delete();
     }
 }

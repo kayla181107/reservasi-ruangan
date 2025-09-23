@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('rooms', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->integer('capacity')->nullable();
-            $table->text('description')->nullable();
-            $table->enum('status', ['active','inactive'])->default('active');
+            $table->string('name'); 
+            $table->integer('capacity'); 
+            $table->text('description')->nullable(); 
+            $table->enum('status', ['active', 'inactive'])->default('active'); // Status ruangan
             $table->timestamps();
         });
     }

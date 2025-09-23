@@ -10,21 +10,17 @@ class ReservationResource extends JsonResource
     {
         return [
             'id'         => $this->id,
-
-            // relasi room (hanya id + name agar ringkas)
+            'user_id'    => $this->user_id,
             'room'       => [
                 'id'   => $this->room->id,
-                'name' => $this->room->name,
+                'name' => $this->room->nama_ruangan, 
             ],
-
-            // field utama sesuai tabel
-            'date'       => $this->date,
+            'room_id'    => $this->room_id,
+            'date'       => $this->date ? $this->date->format('Y-m-d') : null,
             'start_time' => $this->start_time,
             'end_time'   => $this->end_time,
             'status'     => $this->status,
             'reason'     => $this->reason,
-
-            // timestamp tetap ditampilkan
             'created_at' => $this->created_at->toDateTimeString(),
         ];
     }

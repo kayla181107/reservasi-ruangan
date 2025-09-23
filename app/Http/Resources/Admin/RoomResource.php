@@ -1,9 +1,9 @@
 <?php
-namespace App\Http\Resources\Karyawan;
+namespace App\Http\Resources\Admin;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\Karyawan\ReservationResource;
-use App\Http\Resources\Karyawan\FixedScheduleResource;
+use App\Http\Resources\Admin\ReservationResource;
+use App\Http\Resources\Admin\FixedScheduleResource;
 
 class RoomResource extends JsonResource
 {

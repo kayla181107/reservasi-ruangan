@@ -3,79 +3,77 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Room;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\RoomRequest;
+use App\Http\Resources\Admin\RoomResource as AdminRoomResource;
+use App\Http\Resources\Karyawan\RoomResource as KaryawanRoomResource;
+use App\Services\RoomService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class RoomController extends Controller
 {
-    // Tampilkan semua ruangan
+    protected $roomService;
+
+    public function __construct(RoomService $roomService)
+    {
+        $this->roomService = $roomService;
+    }
+
     public function index()
     {
-        $rooms = Room::all();
-        return response()->json($rooms, 200);
+        $rooms = $this->roomService->getAll();
+
+        return Auth::user()->hasRole('admin')
+            ? AdminRoomResource::collection($rooms)
+            : KaryawanRoomResource::collection($rooms);
     }
 
-    // Simpan ruangan baru
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name'        => 'required|string|max:255',
-            'capacity'    => 'required|integer|min:1',
-            'description' => 'nullable|string',
-            'status'      => 'required|in:available,unavailable',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $room = Room::create($request->all());
-        return response()->json($room, 201);
-    }
-
-    // Tampilkan ruangan berdasarkan ID
     public function show($id)
     {
-        $room = Room::find($id);
-        if (!$room) {
-            return response()->json(['message' => 'Room not found'], 404);
-        }
-        return response()->json($room, 200);
+        $room = $this->roomService->find($id);
+
+        return Auth::user()->hasRole('admin')
+            ? new AdminRoomResource($room)
+            : new KaryawanRoomResource($room);
     }
 
-    // Update ruangan
-    public function update(Request $request, $id)
+    public function store(RoomRequest $request)
     {
-        $room = Room::find($id);
-        if (!$room) {
-            return response()->json(['message' => 'Room not found'], 404);
+        if (!Auth::user()->hasRole('admin')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $validator = Validator::make($request->all(), [
-            'name'        => 'sometimes|string|max:255',
-            'capacity'    => 'sometimes|integer|min:1',
-            'description' => 'nullable|string',
-            'status'      => 'sometimes|in:available,unavailable',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $room->update($request->all());
-        return response()->json($room, 200);
+        $room = $this->roomService->create($request->validated());
+        return new AdminRoomResource($room);
     }
 
-    // Hapus ruangan
+    public function update(RoomRequest $request, $id)
+    {
+        if (!Auth::user()->hasRole('admin')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $room = $this->roomService->update($id, $request->validated());
+        return new AdminRoomResource($room);
+    }
+
     public function destroy($id)
     {
-        $room = Room::find($id);
-        if (!$room) {
-            return response()->json(['message' => 'Room not found'], 404);
+        if (!Auth::user()->hasRole('admin')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $room->delete();
-        return response()->json(['message' => 'Room deleted'], 200);
+        try {
+            $this->roomService->delete($id);
+            return response()->json(['message' => 'Room deleted successfully']);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 }

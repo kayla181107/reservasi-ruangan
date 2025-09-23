@@ -22,14 +22,13 @@ class LoginController extends Controller
     }
 
     public function login(LoginRequest $request)
-{
-    $user = $this->loginService->attemptLogin($request->validated());
+    {
+        $result = $this->loginService->attemptLogin($request->validated());
 
-    if (!$user) {
-        return response()->json(['message' => 'Email atau password salah.'], 401);
+        if (! $result) {
+            return response()->json(['message' => 'Email atau password salah.'], 401);
+        }
+
+        return new LoginResource($result);
     }
-
-    return new LoginResource($user); // langsung lempar User
-}
-
 }

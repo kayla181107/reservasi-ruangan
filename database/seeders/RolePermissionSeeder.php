@@ -8,35 +8,30 @@ use Spatie\Permission\Models\Permission;
 
 class RolePermissionSeeder extends Seeder
 {
-    public function run(): void
+    public function run()
     {
-        $permissions = [
-            // Room
-            'create room',
-            'edit room',
-            'delete room',
-            'view room',
+        // bikin permission (cek dulu, kalau belum ada baru buat)
+        Permission::firstOrCreate(
+            ['name' => 'manage reservations'],
+            ['guard_name' => 'web']
+        );
+        Permission::firstOrCreate(
+            ['name' => 'view rooms'],
+            ['guard_name' => 'web']
+        );
 
-            // Reservation
-            'create reservation',
-            'edit reservation',
-            'delete reservation',
-            'view reservation',
-        ];
+        // role admin
+        $adminRole = Role::firstOrCreate(
+            ['name' => 'admin'],
+            ['guard_name' => 'web']
+        );
+        $adminRole->givePermissionTo(['manage reservations', 'view rooms']);
 
-        foreach ($permissions as $perm) {
-            Permission::firstOrCreate(['name' => $perm]);
-        }
-
-        $admin = Role::firstOrCreate(['name' => 'admin']);
-        $karyawan = Role::firstOrCreate(['name' => 'karyawan']);
-
-        $admin->syncPermissions(Permission::all());
-
-        $karyawan->syncPermissions([
-            'create reservation',
-            'edit reservation',
-            'view reservation',
-        ]);
+        // role karyawan
+        $karyawanRole = Role::firstOrCreate(
+            ['name' => 'karyawan'],
+            ['guard_name' => 'web']
+        );
+        $karyawanRole->givePermissionTo(['view rooms']);
     }
 }
