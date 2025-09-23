@@ -8,7 +8,7 @@ class FixedScheduleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // bisa disesuaikan dengan role (admin-only)
+        return true;
     }
 
     public function rules(): array
@@ -18,7 +18,7 @@ class FixedScheduleRequest extends FormRequest
             'day_of_week' => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'start_time'  => 'required|date_format:H:i',
             'end_time'    => 'required|date_format:H:i|after:start_time',
-            'description' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
         ];
     }
 }

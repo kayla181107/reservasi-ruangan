@@ -3,18 +3,19 @@
 namespace App\Http\Resources\Karyawan;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Carbon\Carbon;
 
 class FixedScheduleResource extends JsonResource
 {
     public function toArray($request): array
     {
         return [
-            'id'          => $this->id,
-            'room_id'     => $this->room_id, // relasi ke tabel rooms
+            'id' => $this->id,
+            'room_id' => $this->room->id,
+            'date' => $this->date?->format('Y-m-d'),
             'day_of_week' => $this->day_of_week,
-            'start_time'  => Carbon::parse($this->start_time)->format('H:i'),
-            'end_time'    => Carbon::parse($this->end_time)->format('H:i'),
+            'start_time' => $this->start_time,
+            'end_time' => $this->end_time,
+            'status' => $this->status,
             'description' => $this->description,
         ];
     }

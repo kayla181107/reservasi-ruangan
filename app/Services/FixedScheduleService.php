@@ -9,17 +9,17 @@ class FixedScheduleService
 {
     public function getAll()
     {
-        return FixedSchedule::with('room')->get();
+        return FixedSchedule::with(['room'])->get();
     }
 
     public function find($id)
     {
-        return FixedSchedule::with('room')->findOrFail($id);
+        return FixedSchedule::with(['room'])->findOrFail($id);
     }
 
     public function create(array $data)
     {
-        //  Cek apakah bentrok dengan jadwal tetap lain di hari & ruangan ini
+        // Cek bentrok jadwal di ruangan yang sama & hari yang sama
         $conflict = FixedSchedule::where('room_id', $data['room_id'])
             ->where('day_of_week', $data['day_of_week'])
             ->where(function ($q) use ($data) {
@@ -45,7 +45,6 @@ class FixedScheduleService
     {
         $schedule = FixedSchedule::findOrFail($id);
 
-        //  Cek bentrok (kecuali dirinya sendiri)
         $conflict = FixedSchedule::where('room_id', $data['room_id'])
             ->where('day_of_week', $data['day_of_week'])
             ->where('id', '!=', $id)
