@@ -13,15 +13,24 @@ class ReservationApprovedMail extends Mailable
 
     public $reservation;
 
+    /**
+     * Create a new message instance.
+     */
     public function __construct(Reservation $reservation)
     {
         $this->reservation = $reservation;
     }
 
+    /**
+     * Build the message.
+     */
     public function build()
     {
-        return $this->subject('Reservasi Anda di-APPROVED')
-                    ->view('emails.reservation_approved')
-                    ->with(['reservation' => $this->reservation]);
+        return $this->subject('Reservasi Ruangan Disetujui ✅')
+                    ->html(
+                        view('emails.reservation_approved', [
+                            'reservation' => $this->reservation
+                        ])->render()
+                    );
     }
 }

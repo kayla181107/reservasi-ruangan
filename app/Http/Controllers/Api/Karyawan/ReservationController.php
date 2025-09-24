@@ -26,13 +26,14 @@ class ReservationController extends Controller
     public function store(ReservationStoreRequest $request)
     {
         $reservation = $this->service->create([
-            'user_id'    => Auth::id(),
-            'room_id'    => $request->room_id,
-            'date'       => $request->date,
-            'start_time' => $request->start_time,
-            'end_time'   => $request->end_time,
-            'reason'     => $request->reason ?? null,
-            'status'     => 'pending', // default saat create
+            'user_id'     => Auth::id(),
+            'room_id'     => $request->room_id,
+            'date'        => $request->date,
+            'day_of_week' => $request->day_of_week, 
+            'start_time'  => $request->start_time,
+            'end_time'    => $request->end_time,
+            'reason'      => $request->reason ?? null,
+            'status'      => 'pending', // default saat create
         ]);
 
         return new ReservationResource($reservation);

@@ -13,64 +13,57 @@ class ReservationService
     {
         $data['status'] = 'pending';
 
-        // Parse tanggal & waktu
-        $date       = Carbon::parse($data['date'])->format('Y-m-d');
-        $startTime  = Carbon::parse($date . ' ' . $data['start_time']);
-        $endTime    = Carbon::parse($date . ' ' . $data['end_time']);
+        // Parse date & time
+        $date  = Carbon::parse($data['date'])->format('Y-m-d');
+        $start = Carbon::parse($date . ' ' . $data['start_time']);
+        $end   = Carbon::parse($date . ' ' . $data['end_time']);
 
         // Validasi waktu
-        if ($startTime >= $endTime) {
+        if ($start >= $end) {
             throw ValidationException::withMessages([
-                'time' => 'Waktu mulai harus lebih awal dari waktu selesai.'
+                'time' => 'Start time must be before end time.'
             ]);
         }
 
         // Simpan tanggal & waktu
-        $data['date']       = $date;
-        $data['start_time'] = $startTime->format('H:i');
-        $data['end_time']   = $endTime->format('H:i');
+        $data['date']        = $date;
+        $data['start_time']  = $start->format('H:i');
+        $data['end_time']    = $end->format('H:i');
 
-        //  Validasi bentrok dengan FixedSchedule
-        $dayOfWeek = Carbon::parse($date)->dayOfWeek; // 0=Min, 1=Senin, dst
+        //  Simpan day_of_week otomatis dari date (English: Monday, Tuesday, dst)
+        $data['day_of_week'] = Carbon::parse($date)->format('l');
 
+        // Validasi bentrok dengan FixedSchedule (HARUS ditolak)
         $conflictFixed = FixedSchedule::where('room_id', $data['room_id'])
-            ->where('day_of_week', $dayOfWeek) //  gunakan integer day_of_week
-            ->where(function ($q) use ($startTime, $endTime) {
-                $q->whereBetween('start_time', [$startTime->format('H:i'), $endTime->format('H:i')])
-                  ->orWhereBetween('end_time', [$startTime->format('H:i'), $endTime->format('H:i')])
-                  ->orWhere(function ($q2) use ($startTime, $endTime) {
-                      $q2->where('start_time', '<=', $startTime->format('H:i'))
-                         ->where('end_time', '>=', $endTime->format('H:i'));
+            ->where('day_of_week', $data['day_of_week'])
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('start_time', [$start, $end])
+                  ->orWhereBetween('end_time', [$start, $end])
+                  ->orWhere(function ($q2) use ($start, $end) {
+                      $q2->where('start_time', '<=', $start)
+                         ->where('end_time', '>=', $end);
                   });
             })
             ->exists();
 
         if ($conflictFixed) {
             throw ValidationException::withMessages([
-                'reservation' => 'Bentrok dengan jadwal tetap.'
+                'reservation' => 'Conflicts with fixed schedule.'
             ]);
         }
 
-        // Validasi bentrok dengan reservasi lain
-        $conflictReservation = Reservation::where('room_id', $data['room_id'])
-            ->where('date', $date)
-            ->where('status', '!=', 'canceled')
-            ->where(function ($q) use ($startTime, $endTime) {
-                $q->whereBetween('start_time', [$startTime->format('H:i'), $endTime->format('H:i')])
-                  ->orWhereBetween('end_time', [$startTime->format('H:i'), $endTime->format('H:i')])
-                  ->orWhere(function ($q2) use ($startTime, $endTime) {
-                      $q2->where('start_time', '<=', $startTime->format('H:i'))
-                         ->where('end_time', '>=', $endTime->format('H:i'));
-                  });
-            })
-            ->exists();
+        // Cek bentrok dengan reservasi lain/
+        $conflictReservation = Reservation::overlapping(
+            $data['room_id'], $start, $end
+        )->whereDate('date', $date)
+         ->whereIn('status', ['pending', 'approved'])
+         ->exists();
 
         if ($conflictReservation) {
-            throw ValidationException::withMessages([
-                'reservation' => 'Bentrok dengan reservasi lain.'
-            ]);
+            $data['reason'] = ($data['reason'] ?? '') . ' (Conflict, waiting for admin approval)';
         }
 
+        // Simpan reservasi
         return Reservation::create($data);
     }
 

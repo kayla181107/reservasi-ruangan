@@ -15,7 +15,8 @@ class FixedScheduleRequest extends FormRequest
     {
         return [
             'room_id'     => 'required|exists:rooms,id',
-            'day_of_week' => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
+            'date'        => 'nullable|date|after_or_equal:today',
+            'day_of_week' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
             'start_time'  => 'required|date_format:H:i',
             'end_time'    => 'required|date_format:H:i|after:start_time',
             'description' => 'nullable|string',

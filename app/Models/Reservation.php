@@ -15,6 +15,7 @@ class Reservation extends Model
         'user_id',
         'room_id',
         'date',
+        'day_of_week', 
         'start_time',
         'end_time',
         'status',
@@ -32,10 +33,11 @@ class Reservation extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function room()
-    {
-        return $this->belongsTo(Room::class);
-    }
+public function room()
+{
+    return $this->belongsTo(Room::class, 'room_id', 'id');
+}
+
 
     /**
      * Scope untuk cek overlapping reservation
