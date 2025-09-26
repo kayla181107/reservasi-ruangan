@@ -11,10 +11,10 @@
     <p>Mohon maaf, reservasi Anda <strong>DITOLAK</strong> ❌</p>
 
     <ul>
-        <li><strong>Ruangan:</strong> {{ $reservation->room->name}}</li>
+        <li><strong>Ruangan:</strong> {{ $reservation->room->name }}</li>
+        <li><strong>Hari:</strong> {{ $reservation->day_of_week }}</li>
         <li><strong>Tanggal:</strong> {{ $reservation->date->format('d M Y') }} ({{ $reservation->day_of_week }})</li>
         <li><strong>Waktu:</strong> {{ substr($reservation->start_time,0,5) }} - {{ substr($reservation->end_time,0,5) }}</li>
-        <li><strong>Keterangan:</strong> {{ $reservation->reason ?? '-' }}</li>
     </ul>
 
     <p><strong>Alasan Penolakan:</strong> {{ $reason ?? 'Tidak ada alasan diberikan.' }}</p>

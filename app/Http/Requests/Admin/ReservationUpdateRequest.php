@@ -8,14 +8,13 @@ class ReservationUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return true; 
     }
 
     public function rules(): array
-{
-    return [
-        'status' => 'required|in:approved,rejected,canceled',
-        'reason' => 'nullable|string|max:255',
-    ];
-}
+    {
+        return [
+            'reason' => 'nullable|string|max:255'
+        ];
+    }
 }

@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('fixed_schedules', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade');
-            $table->enum('day_of_week', [
-                'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
-            ]);
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('room_id')->constrained()->onDelete('cascade');
+            $table->date('date'); 
+            $table->enum('day_of_week', ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'])->nullable();
             $table->time('start_time');
             $table->time('end_time');
             $table->string('description')->nullable();

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\Reservation;
+use Carbon\Carbon;
 
 class FixedSchedule extends Model
 {
@@ -15,7 +16,8 @@ class FixedSchedule extends Model
     protected $fillable = [
         'user_id',
         'room_id',
-        'day_of_week',
+        'date',
+        'day_of_week',            
         'start_time',
         'end_time',
         'description',
@@ -23,12 +25,12 @@ class FixedSchedule extends Model
     ];
 
     protected $casts = [
-        'day_of_week' => 'date:Y-m-d', // ✅ cast to date
-        'start_time'  => 'string',     // ✅ save as string (format H:i)
-        'end_time'    => 'string',     // ✅ save as string (format H:i)
+        'date'       => 'date:Y-m-d', 
+        'start_time' => 'string',     
+        'end_time'   => 'string',     
     ];
 
-    // Relation to Room (fixed schedule belongs to one room)
+    // Relasi ke Room (jadwal tetap dimiliki oleh satu ruangan)
     public function room()
     {
         return $this->belongsTo(Room::class);
@@ -44,13 +46,24 @@ class FixedSchedule extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function setDateAttribute($value)
+    {
+        $this->attributes['date'] = $value;
+
+        $carbon = Carbon::parse($value)->locale('en'); 
+        $this->attributes['day_of_week'] = ucfirst($carbon->dayName); 
+    }
+
     /**
-     * Scope to find overlapping reservations
+     * Scope untuk mencari overlapping reservation
      */
     public function scopeOverlapping($query, $roomId, $start, $end)
     {
+        $start = Carbon::parse($start)->format('H:i');
+        $end   = Carbon::parse($end)->format('H:i');
+
         return $query->where('room_id', $roomId)
-            ->whereIn('status', ['pending','approved'])
+            ->whereIn('status', ['pending', 'approved', 'rejected', 'canceled'])
             ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('start_time', [$start, $end])
                   ->orWhereBetween('end_time', [$start, $end])

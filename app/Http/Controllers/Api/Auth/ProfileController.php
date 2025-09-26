@@ -16,27 +16,38 @@ class ProfileController extends Controller
 
     // PUT Profile
     public function updateProfile(Request $request)
-{
-    $user = $request->user();
+    {
+        $user = $request->user();
 
-    $validated = $request->validate([
-        'name'     => ['required', 'string', 'max:255'],
-        'email'    => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-        'phone'    => ['nullable', 'string', 'max:20'],
-        'password' => ['nullable', 'min:6'],
-    ]);
+        $validated = $request->validate([
+            'name'                  => ['required', 'string', 'max:255'],
+            'email'                 => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'current_password'      => ['nullable', 'current_password'], // password lama
+            'password'              => ['nullable', 'min:6', 'confirmed'], // password baru
+            'password_confirmation' => ['nullable', 'min:6'],
+        ]);
 
-    if (!empty($validated['password'])) {
-        $validated['password'] = Hash::make($validated['password']);
-    } else {
-        unset($validated['password']);
+        // Kalau user isi password baru, maka pastikan current_password juga diisi
+        if (!empty($validated['password'])) {
+            if (empty($validated['current_password'])) {
+                return response()->json([
+                    'message' => 'Password lama wajib diisi untuk mengubah password.'
+                ], 422);
+            }
+
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
+
+        unset($validated['current_password']); 
+        unset($validated['password_confirmation']); 
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Profile berhasil diperbarui',
+            'user'    => $user
+        ]);
     }
-
-    $user->update($validated);
-
-    return response()->json([
-        'message' => 'Profile berhasil diperbarui',
-        'user'    => $user
-    ]);
-}
 }

@@ -9,24 +9,21 @@ return new class extends Migration
     public function up()
     {
         Schema::table('reservations', function (Blueprint $table) {
-            // Tambah kolom day_of_week setelah date
             $table->string('day_of_week')->after('date')->nullable();
 
-            // Pastikan kolom start_time & end_time tipe time
-            $table->time('start_time')->change();
-            $table->time('end_time')->change();
+            // Simpan jam dalam format string "HH:ii" (contoh: 09:00)
+            $table->string('start_time', 5)->change();
+            $table->string('end_time', 5)->change();
         });
     }
 
     public function down()
     {
         Schema::table('reservations', function (Blueprint $table) {
-            // Hapus kolom day_of_week
             $table->dropColumn('day_of_week');
 
-            // Balikin ke string (sesuai kondisi awal)
-            $table->string('start_time')->change();
-            $table->string('end_time')->change();
+            $table->time('start_time')->change();
+            $table->time('end_time')->change();
         });
     }
 };

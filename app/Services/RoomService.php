@@ -9,36 +9,23 @@ class RoomService
 {
     public function getAll()
     {
-        // ambil semua room dengan relasi reservasi & fixed schedule
         return Room::with(['reservations', 'fixedSchedules'])->get();
     }
 
     public function find($id)
     {
-        // ambil room + user yang reservasi + jadwal tetap
         return Room::with(['reservations.user', 'fixedSchedules'])->findOrFail($id);
     }
 
     public function create(array $data)
     {
-        return Room::create([
-            'name'        => $data['name'],
-            'capacity'    => $data['capacity'],
-            'description' => $data['description'] ?? null,
-            'status'      => $data['status'] ?? 'inactive',
-        ]);
+        return Room::create($data);
     }
 
     public function update($id, array $data)
     {
         $room = Room::findOrFail($id);
-        $room->update([
-            'name'        => $data['name'],
-            'capacity'    => $data['capacity'],
-            'description' => $data['description'] ?? null,
-            'status'      => $data['status'] ?? $room->status,
-        ]);
-
+        $room->update($data);
         return $room;
     }
 
