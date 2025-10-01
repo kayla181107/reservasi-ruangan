@@ -16,13 +16,13 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('room_id')->constrained()->onDelete('cascade');
             $table->date('date'); 
-            $table->enum('day_of_week', ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'])->nullable();
+            $table->enum('day_of_week', ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'])->nullable();
             $table->time('start_time');
             $table->time('end_time');
             $table->string('description')->nullable();
             $table->timestamps();
         });
-    }
+    } 
 
     /**
      * Reverse the migrations.

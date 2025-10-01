@@ -25,8 +25,21 @@ class FixedScheduleService
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
-            //  isi user_id otomatis dari user yang login
+
+            // isi user_id otomatis dari user yang login
             $data['user_id'] = Auth::guard('api')->id();
+
+            // Mapping day_of_week ke bahasa Indonesia
+            $days = [
+                'Monday'    => 'Senin',
+                'Tuesday'   => 'Selasa',
+                'Wednesday' => 'Rabu',
+                'Thursday'  => 'Kamis',
+                'Friday'    => 'Jumat',
+                'Saturday'  => 'Sabtu',
+                'Sunday'    => 'Minggu',
+            ];
+            $data['day_of_week'] = $days[\Carbon\Carbon::parse($data['date'])->format('l')];
 
             $fixedSchedule = FixedSchedule::create($data);
 
@@ -44,7 +57,7 @@ class FixedScheduleService
                 })
                 ->get();
 
-            //  Update jadi rejected + kirim email
+            // Update jadi rejected + kirim email
             foreach ($conflictReservations as $reservation) {
                 $reservation->update([
                     'status' => 'rejected',
@@ -67,12 +80,25 @@ class FixedScheduleService
     public function update(FixedSchedule $fixedSchedule, array $data)
     {
         return DB::transaction(function () use ($fixedSchedule, $data) {
-            //  catat siapa yang terakhir update
+
             $data['user_id'] = Auth::guard('api')->id();
+
+            if(isset($data['date'])) {
+                $days = [
+                    'Monday'    => 'Senin',
+                    'Tuesday'   => 'Selasa',
+                    'Wednesday' => 'Rabu',
+                    'Thursday'  => 'Kamis',
+                    'Friday'    => 'Jumat',
+                    'Saturday'  => 'Sabtu',
+                    'Sunday'    => 'Minggu',
+                ];
+                $data['day_of_week'] = $days[\Carbon\Carbon::parse($data['date'])->format('l')];
+            }
 
             $fixedSchedule->update($data);
 
-            //  Cari reservation yang bentrok
+            // Cari reservation yang bentrok
             $conflictReservations = Reservation::where('room_id', $fixedSchedule->room_id)
                 ->where('date', $fixedSchedule->date)
                 ->whereIn('status', ['pending', 'approved'])
@@ -86,7 +112,7 @@ class FixedScheduleService
                 })
                 ->get();
 
-            //  Update jadi rejected + kirim email
+            // Update jadi rejected + kirim email
             foreach ($conflictReservations as $reservation) {
                 $reservation->update([
                     'status' => 'rejected',

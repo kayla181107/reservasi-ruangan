@@ -16,17 +16,17 @@ class Reservation extends Model
         'user_id',
         'room_id',
         'date',
-        'day_of_week',   // ✅ ganti dari hari → day_of_week
+        'day_of_week',   
         'start_time',
         'end_time',
-        'reason',
         'status',
+        'reason',
     ];
 
     protected $casts = [
-        'date'       => 'date:Y-m-d', // ✅ cast jadi tanggal saja
-        'start_time' => 'string',     // ✅ simpan sebagai string (format H:i)
-        'end_time'   => 'string',     // ✅ simpan sebagai string (format H:i)
+        'date'       => 'date:Y-m-d', 
+        'start_time' => 'string',     
+        'end_time'   => 'string',     
     ];
 
     public function user()
@@ -44,7 +44,7 @@ class Reservation extends Model
         $this->attributes['date'] = $value;
 
         $carbon = Carbon::parse($value)->locale('en'); 
-        $this->attributes['day_of_week'] = ucfirst($carbon->dayName); // Example: Monday
+        $this->attributes['day_of_week'] = ucfirst($carbon->dayName); 
     }
 
     /**

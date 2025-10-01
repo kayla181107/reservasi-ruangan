@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use App\Services\Traits\ReservationCommonTrait;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationRejectedByFixedScheduleMail;
+use App\Mail\ReservationRejectedMail;
 
 class ReservationService
 {
@@ -69,7 +70,7 @@ class ReservationService
                   });
             })
             ->exists();
-
+   
         if ($conflictFixed) {
             $data['status'] = 'rejected';
             $data['reason'] = 'Ditolak otomatis karena bentrok dengan Fixed Schedule.';
@@ -97,6 +98,15 @@ class ReservationService
         if ($conflictReservations->count() > 0) {
             $data['status'] = 'rejected';
             $data['reason'] = 'Ditolak otomatis karena user sudah punya reservasi pada waktu ini.';
+
+            $reservation = Reservation::create($data);
+
+            if ($reservation->user && $reservation->user->email) {
+                Mail::to($reservation->user->email)
+                    ->send(new ReservationRejectedMail($reservation));
+            }
+
+            return $reservation;
         }
 
         return Reservation::create($data);

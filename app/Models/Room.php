@@ -14,7 +14,7 @@ class Room extends Model
         'name',
         'capacity',
         'description',
-        'status', // default di DB = "inactive"
+        'status', 
     ];
 
     // Relasi ke Reservations

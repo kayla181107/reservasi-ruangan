@@ -30,20 +30,21 @@ class FixedSchedule extends Model
         'end_time'   => 'string',     
     ];
 
-    // Relasi ke Room (jadwal tetap dimiliki oleh satu ruangan)
+    // Relasi ke Room
     public function room()
     {
         return $this->belongsTo(Room::class);
     }
 
-    public function reservations()
-    {
-        return $this->hasMany(Reservation::class);
-    }
-
+    // Relasi ke User
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class);
     }
 
     public function setDateAttribute($value)

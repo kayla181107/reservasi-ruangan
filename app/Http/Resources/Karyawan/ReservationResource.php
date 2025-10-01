@@ -9,20 +9,18 @@ class ReservationResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'id'         => $this->id,
-            'user_id'    => $this->user_id,
-            'room'       => [
+            'id'            => $this->id,
+            'room'          => [
                 'id'   => $this->room->id,
-                'name' => $this->room->name, 
+                'name' => $this->room->name,
             ],
-            'room_id'    => $this->room_id,
-            'date'       => $this->date ? $this->date->format('Y-m-d') : null,
-            'start_time' => $this->start_time,
-            "day_of_week"=> $this->day_of_week,
-            'end_time'   => $this->end_time,
-            'status'     => $this->status,
-            'reason'     => $this->reason,
-            'created_at' => $this->created_at->toDateTimeString(),
+            'date'         => $this->date->format('Y-m-d'),
+            'day_of_week'  => $this->day_of_week, 
+            'start_time'   => $this->start_time,
+            'end_time'     => $this->end_time,
+            'status'       => $this->status,
+            'reason'       => $this->reason,
+            'created_at'   => $this->created_at->toDateTimeString(),
         ];
     }
 }

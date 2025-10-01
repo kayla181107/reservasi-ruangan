@@ -12,7 +12,7 @@ class ReservationCanceledByOverlapMail extends Mailable
     use Queueable, SerializesModels;
 
     public $reservation;
-    public $approvedReservation; // reservation that caused the cancel
+    public $approvedReservation; 
 
     public function __construct(Reservation $reservation, Reservation $approvedReservation)
     {

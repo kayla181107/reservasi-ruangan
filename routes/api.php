@@ -36,13 +36,13 @@ Route::middleware('auth:api')->group(function () {
 
         // Fixed Schedules
         Route::get('fixed-schedules', [FixedScheduleController::class, 'index'])->name('fixed-schedules.list');
-        Route::get('fixed-schedules/{id}', [FixedScheduleController::class, 'show'])->name('fixed-schedules.detail');
+        Route::get('fixed-schedules/{schedule}', [FixedScheduleController::class, 'show'])->name('fixed-schedules.detail');
 
         // Reservations
         Route::get('reservations', [ReservationController::class, 'index'])->name('reservations.list');
         Route::get('reservations/{id}', [ReservationController::class, 'show'])->name('reservations.detail');
     });
-
+ 
     /**
      * ===============================
      * ADMIN ROUTES
@@ -56,8 +56,8 @@ Route::middleware('auth:api')->group(function () {
 
         // Fixed Schedules
         Route::post('fixed-schedules', [FixedScheduleController::class, 'store'])->name('fixed-schedules.create');
-        Route::put('fixed-schedules/{id}', [FixedScheduleController::class, 'update'])->name('fixed-schedules.update');
-        Route::delete('fixed-schedules/{id}', [FixedScheduleController::class, 'destroy'])->name('fixed-schedules.delete');
+        Route::put('fixed-schedules/{schedule}', [FixedScheduleController::class, 'update'])->name('fixed-schedules.update');
+        Route::delete('fixed-schedules/{schedule}', [FixedScheduleController::class, 'destroy'])->name('fixed-schedules.delete');
 
         // Users
         Route::get('users', [UserController::class, 'index'])->name('users.list');
@@ -67,8 +67,8 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.delete');
 
         // Reservations (approve/reject/delete)
-        Route::put('reservations/{id}/approve', [ReservationController::class, 'update'])->name('reservations.approve');
-        Route::put('reservations/{id}/rejected', [ReservationController::class, 'update'])->name('reservations.rejected');
+        Route::put('reservations/{id}/approve', [ReservationController::class, 'approve'])->name('reservations.approve');
+        Route::put('reservations/{id}/rejected', [ReservationController::class, 'rejected'])->name('reservations.rejected');
         Route::delete('reservations/{id}', [ReservationController::class, 'destroy'])->name('reservations.delete');
     });
 

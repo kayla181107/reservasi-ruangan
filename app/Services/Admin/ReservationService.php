@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Services\Admin;
 
 use App\Models\Reservation;
@@ -18,10 +17,9 @@ class ReservationService
     {
         $reservation = Reservation::with(['user', 'room'])->findOrFail($id);
 
-        //  Validasi status yang boleh dipakai
         if (!in_array($data['status'], ['approved', 'rejected', 'pending'])) {
             throw ValidationException::withMessages([
-                'status' => 'Status reservasi tidak valid.'
+                'status' => 'Invalid reservation status.'
             ]);
         }
 
@@ -30,7 +28,6 @@ class ReservationService
             'reason' => $data['reason'] ?? null,
         ]);
 
-        //  Approved
         if ($data['status'] === 'approved') {
             // Aktifkan ruangan langsung setelah disetujui
             if ($reservation->room) {
@@ -38,18 +35,18 @@ class ReservationService
             }
 
             if ($reservation->user && $reservation->user->email) {
-                Mail::to($reservation->user->email)
+                Mail::to($reservation->user->email)      
                     ->send(new ReservationApprovedMail($reservation));
-            }
+            } 
 
             // Tolak semua pending lain yang bentrok
             $overlaps = Reservation::where('room_id', $reservation->room_id)
-                ->where('day_of_week', $reservation->day_of_week)
+                ->where('day_of_week', $reservation->day_of_week) 
                 ->where('id', '!=', $reservation->id)
                 ->where('status', 'pending')
                 ->where(function ($q) use ($reservation) {
-                    $q->whereBetween('start_time', [$reservation->start_time, $reservation->end_time])
-                      ->orWhereBetween('end_time', [$reservation->start_time, $reservation->end_time])
+                    $q->whereBetween('start_time', [$reservation->start_time, $reservation->end_time]) 
+                      ->orWhereBetween('end_time', [$reservation->start_time, $reservation->end_time]) 
                       ->orWhere(function ($q2) use ($reservation) {
                           $q2->where('start_time', '<=', $reservation->start_time)
                              ->where('end_time', '>=', $reservation->end_time);
@@ -70,7 +67,6 @@ class ReservationService
             }
         }
 
-        // Rejected
         if ($data['status'] === 'rejected' && $reservation->user && $reservation->user->email) {
             Mail::to($reservation->user->email)
                 ->send(new ReservationRejectedMail($reservation, $data['reason'] ?? null));

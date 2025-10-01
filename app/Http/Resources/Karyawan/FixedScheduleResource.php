@@ -15,7 +15,6 @@ class FixedScheduleResource extends JsonResource
             'day_of_week' => $this->day_of_week,
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
-            'status' => $this->status,
             'description' => $this->description,
         ];
     }

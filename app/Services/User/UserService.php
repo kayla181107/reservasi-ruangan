@@ -41,10 +41,8 @@ class UserService
             unset($data['password']);
         }
 
-        // Update data user
         $user->update($data);
 
-        // Kalau ada role → ganti role di Spatie
         if (!empty($data['role'])) {
             $user->syncRoles([$data['role']]);
         }

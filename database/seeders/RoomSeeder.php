@@ -67,7 +67,7 @@ class RoomSeeder extends Seeder
                 'name'        => $room['name'],
                 'capacity'    => $room['capacity'],
                 'description' => $room['description'],
-                'status'      => 'inactive', // default
+                'status'      => 'inactive', 
             ]);
         }
     }
