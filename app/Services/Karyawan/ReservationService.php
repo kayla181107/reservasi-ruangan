@@ -97,7 +97,7 @@ class ReservationService
 
         if ($conflictReservations->count() > 0) {
             $data['status'] = 'rejected';
-            $data['reason'] = 'Ditolak otomatis karena user sudah punya reservasi pada waktu ini.';
+            $data['reason'] = 'Ditolak otomatis karena bentrok dengan reservasi lain.';
 
             $reservation = Reservation::create($data);
 

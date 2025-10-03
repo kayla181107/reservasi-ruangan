@@ -82,4 +82,9 @@ Route::middleware('auth:api')->group(function () {
         Route::post('reservations', [ReservationController::class, 'store'])->name('reservations.create');
         Route::put('reservations/{id}/cancel', [ReservationController::class, 'cancel'])->name('reservations.cancel');
     });
+
+    Route::options('{any}', function () {
+    return response()->json([], 200);
+})->where('any', '.*');
+
 });

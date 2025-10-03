@@ -1,8 +1,8 @@
 <?php
+
 namespace App\Http\Resources\Admin;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Carbon\Carbon;
 
 class FixedScheduleResource extends JsonResource
 {
@@ -19,8 +19,7 @@ class FixedScheduleResource extends JsonResource
                 'id' => $this->room->id,
                 'name' => $this->room->name,
             ],
-            'date'       => Carbon::parse($this->date)->format('Y-m-d'),
-            'day_of_week' => Carbon::parse($this->date)->locale('id')->dayName,
+            'day_of_week' => $this->day_of_week,
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
             'description' => $this->description,
@@ -29,8 +28,3 @@ class FixedScheduleResource extends JsonResource
         ];
     }
 }
-
-
-
-
-

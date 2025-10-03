@@ -16,7 +16,6 @@ class FixedSchedule extends Model
     protected $fillable = [
         'user_id',
         'room_id',
-        'date',
         'day_of_week',            
         'start_time',
         'end_time',
@@ -25,7 +24,6 @@ class FixedSchedule extends Model
     ];
 
     protected $casts = [
-        'date'       => 'date:Y-m-d', 
         'start_time' => 'string',     
         'end_time'   => 'string',     
     ];
@@ -42,17 +40,10 @@ class FixedSchedule extends Model
         return $this->belongsTo(User::class);
     }
 
+    // Relasi ke Reservations
     public function reservations()
     {
         return $this->hasMany(Reservation::class);
-    }
-
-    public function setDateAttribute($value)
-    {
-        $this->attributes['date'] = $value;
-
-        $carbon = Carbon::parse($value)->locale('en'); 
-        $this->attributes['day_of_week'] = ucfirst($carbon->dayName); 
     }
 
     /**
