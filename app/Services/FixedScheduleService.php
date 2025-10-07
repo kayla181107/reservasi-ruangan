@@ -3,111 +3,65 @@
 namespace App\Services;
 
 use App\Models\FixedSchedule;
-use App\Models\Reservation;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Auth;
-use App\Mail\ReservationRejectedByFixedScheduleMail;
 
 class FixedScheduleService
 {
-    public function getAll()
+    public function getAllFiltered(array $filters = [], $perPage = 10)
     {
-        return FixedSchedule::with(['room', 'user'])->latest()->get();
+        $query = FixedSchedule::with('room');
+
+        // 🔍 Filter Search
+        if (!empty($filters['search'])) {
+            $searchTerm = strtolower($filters['search']);
+            $query->whereHas('room', function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchTerm}%"]);
+            });
+        }
+
+        // 🗓 Filter Hari
+        if (!empty($filters['day_of_week'])) {
+            $query->where('day_of_week', $filters['day_of_week']);
+        }
+
+        // 🕒 Filter Jam Mulai
+        if (!empty($filters['start_time'])) {
+            $query->where('start_time', '>=', $filters['start_time']);
+        }
+
+        // 🕒 Filter Jam Selesai
+        if (!empty($filters['end_time'])) {
+            $query->where('end_time', '<=', $filters['end_time']);
+        }
+
+        // 🏠 Filter Berdasarkan Room ID
+        if (!empty($filters['room_id'])) {
+            $query->where('room_id', $filters['room_id']);
+        }
+
+        // 📑 Pagination
+        return $query->orderBy('day_of_week', 'asc')->paginate($perPage);
+    }
+
+    public function find($id)
+    {
+        return FixedSchedule::with('room')->findOrFail($id);
     }
 
     public function create(array $data)
     {
-        return DB::transaction(function () use ($data) {
-
-            $data['user_id'] = Auth::id();
-
-            $fixedSchedule = FixedSchedule::create($data);
-
-            // Cari reservation bentrok
-            $conflictReservations = Reservation::where('room_id', $fixedSchedule->room_id)
-                ->whereIn('status', ['pending', 'approved'])
-                ->whereRaw("DAYNAME(date) = ?", [self::mapDayToEnglish($fixedSchedule->day_of_week)])
-                ->where(function ($q) use ($fixedSchedule) {
-                    $q->whereBetween('start_time', [$fixedSchedule->start_time, $fixedSchedule->end_time])
-                      ->orWhereBetween('end_time', [$fixedSchedule->start_time, $fixedSchedule->end_time])
-                      ->orWhere(function ($q2) use ($fixedSchedule) {
-                          $q2->where('start_time', '<=', $fixedSchedule->start_time)
-                             ->where('end_time', '>=', $fixedSchedule->end_time);
-                      });
-                })
-                ->get();
-
-            foreach ($conflictReservations as $reservation) {
-                $reservation->update([
-                    'status' => 'rejected',
-                    'reason' => 'Ditolak otomatis karena bentrok dengan Fixed Schedule.'
-                ]);
-
-                if ($reservation->user?->email) {
-                    Mail::to($reservation->user->email)
-                        ->send(new ReservationRejectedByFixedScheduleMail($reservation));
-                }
-            }
-
-            return $fixedSchedule;
-        });
+        return FixedSchedule::create($data);
     }
 
-    public function update(FixedSchedule $fixedSchedule, array $data)
+    public function update($id, array $data)
     {
-        return DB::transaction(function () use ($fixedSchedule, $data) {
-
-            $data['user_id'] = Auth::id();
-
-            $fixedSchedule->update($data);
-
-            // Cek konflik
-            $conflictReservations = Reservation::where('room_id', $fixedSchedule->room_id)
-                ->whereIn('status', ['pending', 'approved'])
-                ->whereRaw("DAYNAME(date) = ?", [self::mapDayToEnglish($fixedSchedule->day_of_week)])
-                ->where(function ($q) use ($fixedSchedule) {
-                    $q->whereBetween('start_time', [$fixedSchedule->start_time, $fixedSchedule->end_time])
-                      ->orWhereBetween('end_time', [$fixedSchedule->start_time, $fixedSchedule->end_time])
-                      ->orWhere(function ($q2) use ($fixedSchedule) {
-                          $q2->where('start_time', '<=', $fixedSchedule->start_time)
-                             ->where('end_time', '>=', $fixedSchedule->end_time);
-                      });
-                })
-                ->get();
-
-            foreach ($conflictReservations as $reservation) {
-                $reservation->update([
-                    'status' => 'rejected',
-                    'reason' => 'Ditolak otomatis karena bentrok dengan Fixed Schedule.'
-                ]);
-
-                if ($reservation->user?->email) {
-                    Mail::to($reservation->user->email)
-                        ->send(new ReservationRejectedByFixedScheduleMail($reservation));
-                }
-            }
-
-            return $fixedSchedule;
-        });
+        $schedule = FixedSchedule::findOrFail($id);
+        $schedule->update($data);
+        return $schedule;
     }
 
-    public function delete(FixedSchedule $fixedSchedule)
+    public function delete($id)
     {
-        return $fixedSchedule->delete();
-    }
-
-    private static function mapDayToEnglish(string $dayIndo): string
-    {
-        $map = [
-            'Senin' => 'Monday',
-            'Selasa' => 'Tuesday',
-            'Rabu' => 'Wednesday',
-            'Kamis' => 'Thursday',
-            'Jumat' => 'Friday',
-            'Sabtu' => 'Saturday',
-            'Minggu' => 'Sunday',
-        ];
-        return $map[$dayIndo] ?? $dayIndo;
+        $schedule = FixedSchedule::findOrFail($id);
+        return $schedule->delete();
     }
 }

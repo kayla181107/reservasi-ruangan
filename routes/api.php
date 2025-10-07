@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\FixedScheduleController;
 use App\Http\Controllers\Api\User\UserController;
 use App\Http\Controllers\Api\ReservationController;
+use App\Http\Controllers\Api\DashboardController;
+
 
 /**
  * ===============================
@@ -82,6 +84,10 @@ Route::middleware('auth:api')->group(function () {
         Route::post('reservations', [ReservationController::class, 'store'])->name('reservations.create');
         Route::put('reservations/{id}/cancel', [ReservationController::class, 'cancel'])->name('reservations.cancel');
     });
+    
+
+Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+
 
     Route::options('{any}', function () {
     return response()->json([], 200);

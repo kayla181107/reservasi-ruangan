@@ -7,58 +7,79 @@ use App\Http\Requests\FixedScheduleRequest;
 use App\Http\Resources\Admin\FixedScheduleResource as AdminResource;
 use App\Http\Resources\Karyawan\FixedScheduleResource as KaryawanResource;
 use App\Services\FixedScheduleService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\FixedSchedule;
 
 class FixedScheduleController extends Controller
 {
-    protected $service;
+    protected $fixedScheduleService;
 
-    public function __construct(FixedScheduleService $service)
+    public function __construct(FixedScheduleService $fixedScheduleService)
     {
-        $this->service = $service;
+        $this->fixedScheduleService = $fixedScheduleService;
     }
 
-    // List semua fixed schedule
-    public function index()
+    public function index(Request $request)
     {
-        $schedules = $this->service->getAll();
+        $filters = [
+            'day_of_week' => $request->input('day_of_week'),
+            'start_time' => $request->input('start_time'),
+            'end_time' => $request->input('end_time'),
+            'room_id' => $request->input('room_id'),
+            'search' => $request->input('search'),
+        ];
 
-        return Auth::user()->hasRole('admin')
-            ? AdminResource::collection($schedules)
-            : KaryawanResource::collection($schedules);
+        $perPage = $request->input('per_page', 10);
+
+        $fixedSchedules = $this->fixedScheduleService->getAllFiltered($filters, $perPage);
+
+        $user = Auth::user();
+        if ($user->hasRole('admin')) {
+            return AdminResource::collection($fixedSchedules);
+        } else {
+            return KaryawanResource::collection($fixedSchedules);
+        }
     }
 
-    // Buat fixed schedule baru
+    public function show($id)
+    {
+        $fixedSchedule = $this->fixedScheduleService->find($id);
+
+        $user = Auth::user();
+        if ($user->hasRole('admin')) {
+            return new AdminResource($fixedSchedule);
+        } else {
+            return new KaryawanResource($fixedSchedule);
+        }
+    }
+
     public function store(FixedScheduleRequest $request)
     {
-        $data = $request->validated(); // sudah termasuk day_of_week, start_time, end_time
-        $schedule = $this->service->create($data);
+        if (!Auth::user()->hasRole('admin')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
-        return new AdminResource($schedule);
+        $fixedSchedule = $this->fixedScheduleService->create($request->validated());
+        return new AdminResource($fixedSchedule);
     }
 
-    // Detail fixed schedule
-    public function show(FixedSchedule $schedule)
+    public function update(FixedScheduleRequest $request, $id)
     {
-        return Auth::user()->hasRole('admin')
-            ? new AdminResource($schedule->load(['room', 'user']))
-            : new KaryawanResource($schedule->load(['room', 'user']));
+        if (!Auth::user()->hasRole('admin')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $fixedSchedule = $this->fixedScheduleService->update($id, $request->validated());
+        return new AdminResource($fixedSchedule);
     }
 
-    // Update fixed schedule
-    public function update(FixedScheduleRequest $request, FixedSchedule $schedule)
+    public function destroy($id)
     {
-        $data = $request->validated();
-        $schedule = $this->service->update($schedule, $data);
+        if (!Auth::user()->hasRole('admin')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
-        return new AdminResource($schedule);
-    }
-
-    // Hapus fixed schedule
-    public function destroy(FixedSchedule $schedule)
-    {
-        $this->service->delete($schedule);
-        return response()->json(['message' => 'FixedSchedule deleted successfully']);
+        $this->fixedScheduleService->delete($id);
+        return response()->json(['message' => 'Fixed schedule deleted successfully']);
     }
 }

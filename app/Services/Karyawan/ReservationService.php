@@ -147,4 +147,34 @@ class ReservationService
 
         return $reservation;
     }
+
+    /**
+     * 🔍 Get user reservations with filters & pagination
+     */
+    public function getUserReservationsWithFilters(int $userId, array $filters = [], int $perPage = 10)
+    {
+        $query = Reservation::with('room')
+            ->where('user_id', $userId)
+            ->orderBy('date', 'desc')
+            ->orderBy('start_time', 'asc');
+
+        if (!empty($filters['date'])) {
+            $query->whereDate('date', $filters['date']);
+        }
+
+        if (!empty($filters['day_of_week'])) {
+            $query->where('day_of_week', $filters['day_of_week']);
+        }
+
+        if (!empty($filters['start_time'])) {
+            $query->whereTime('start_time', '>=', $filters['start_time']);
+        }
+
+        if (!empty($filters['end_time'])) {
+            $query->whereTime('end_time', '<=', $filters['end_time']);
+        }
+
+        
+        return $query->paginate($perPage);
+    }
 }

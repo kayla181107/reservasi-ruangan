@@ -38,18 +38,80 @@ class ReservationController extends Controller
 
     /**
      * GET /reservations
+     * 
+     * @queryParam date date optional Tanggal reservasi (YYYY-MM-DD).
+     * @queryParam day_of_week string optional Nama hari (Senin, Selasa, dst).
+     * @queryParam start_time string optional Jam mulai (HH:MM).
+     * @queryParam end_time string optional Jam selesai (HH:MM).
+     * @queryParam page integer optional Halaman pagination.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
+        // Filter parameters
+        $filters = [
+            'date'        => $request->query('date'),
+            'day_of_week' => $request->query('day_of_week'),
+            'start_time'  => $request->query('start_time'),
+            'end_time'    => $request->query('end_time'),
+            'status'      => $request->query('status'), 
+        ];
+
+        $perPage = $request->query('per_page', 10); // default 10 per halaman
+
+        // ================================
+        // ADMIN
+        // ================================
         if ($user->hasRole('admin')) {
-            $reservations = $this->adminService->getAll();
+            // Ganti ambil data pakai query (bukan collection)
+            $reservationsQuery = \App\Models\Reservation::query()->orderBy('date', 'desc');
+
+            // Terapkan filter
+            $reservationsQuery->when($filters['date'], function ($query) use ($filters) {
+                return $query->whereDate('date', $filters['date']);
+            })->when($filters['day_of_week'], function ($query) use ($filters) {
+                return $query->where('day_of_week', $filters['day_of_week']);
+            })->when($filters['start_time'], function ($query) use ($filters) {
+                return $query->whereTime('start_time', '>=', $filters['start_time']);
+            })->when($filters['end_time'], function ($query) use ($filters) {
+                return $query->whereTime('end_time', '<=', $filters['end_time']);
+            })
+            ->when($filters['status'], function ($query) use ($filters) {
+           return $query->where('status', $filters['status']);
+            });
+
+
+            // Pagination
+            $reservations = $reservationsQuery->paginate($perPage)->appends($request->query());
+
             return AdminReservationResource::collection($reservations);
         }
 
+        // ================================
+        // KARYAWAN
+        // ================================
         if ($user->hasRole('karyawan')) {
-            $reservations = $this->karyawanService->getUserReservations($user->id);
+            $reservationsQuery = \App\Models\Reservation::where('user_id', $user->id)->orderBy('date', 'desc');
+
+            // Terapkan filter
+            $reservationsQuery->when($filters['date'], function ($query) use ($filters) {
+                return $query->whereDate('date', $filters['date']);
+            })->when($filters['day_of_week'], function ($query) use ($filters) {
+                return $query->where('day_of_week', $filters['day_of_week']);
+            })->when($filters['start_time'], function ($query) use ($filters) {
+                return $query->whereTime('start_time', '>=', $filters['start_time']);
+            })->when($filters['end_time'], function ($query) use ($filters) {
+                return $query->whereTime('end_time', '<=', $filters['end_time']);
+            })
+            ->when($filters['status'], function ($query) use ($filters) {
+                return $query->where('status', $filters['status']);
+            });
+
+
+            // Pagination
+            $reservations = $reservationsQuery->paginate($perPage)->appends($request->query());
+
             return KaryawanReservationResource::collection($reservations);
         }
 

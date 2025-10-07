@@ -7,9 +7,30 @@ use Illuminate\Validation\ValidationException;
 
 class RoomService
 {
-    public function getAll()
+    public function getAll(array $filters = [], array $pagination = [])
     {
-        return Room::with(['reservations', 'fixedSchedules'])->get();
+        $query = Room::with(['reservations', 'fixedSchedules']);
+
+        // filter name (pencarian parsial)
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        }
+
+        // filter capacity (>=)
+        if (!empty($filters['capacity'])) {
+            $query->where('capacity', '>=', $filters['capacity']);
+        }
+
+        // filter status (exact match)
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        // pagination default: page 1, per_page 10
+        $perPage = isset($pagination['per_page']) ? (int) $pagination['per_page'] : 10;
+        $page = isset($pagination['page']) ? (int) $pagination['page'] : 1;
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
     }
 
     public function find($id)

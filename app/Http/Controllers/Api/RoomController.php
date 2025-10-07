@@ -7,6 +7,7 @@ use App\Http\Requests\RoomRequest;
 use App\Http\Resources\Admin\RoomResource as AdminRoomResource;
 use App\Http\Resources\Karyawan\RoomResource as KaryawanRoomResource;
 use App\Services\RoomService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
@@ -19,13 +20,36 @@ class RoomController extends Controller
         $this->roomService = $roomService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $rooms = $this->roomService->getAll();
+        // ambil parameter filter dan pagination dari request
+        $filters = [
+            'name' => $request->query('name'),
+            'capacity' => $request->query('capacity'),
+            'status' => $request->query('status'),
+        ];
 
-        return Auth::user()->hasRole('admin')
+        $pagination = [
+            'page' => $request->query('page', 1),
+            'per_page' => $request->query('per_page', 10),
+        ];
+
+        $rooms = $this->roomService->getAll($filters, $pagination);
+
+        // sesuaikan resource berdasarkan role
+        $resource = Auth::user()->hasRole('admin')
             ? AdminRoomResource::collection($rooms)
             : KaryawanRoomResource::collection($rooms);
+
+        // tambahkan meta data pagination di response
+        return $resource->additional([
+            'meta' => [
+                'current_page' => $rooms->currentPage(),
+                'per_page' => $rooms->perPage(),
+                'total' => $rooms->total(),
+                'last_page' => $rooms->lastPage(),
+            ]
+        ]);
     }
 
     public function show($id)

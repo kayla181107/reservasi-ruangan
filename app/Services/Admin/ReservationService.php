@@ -81,4 +81,33 @@ class ReservationService
         $reservation->delete();
         return true;
     }
+
+    /**
+     * 🔍 Get all reservations with optional filters and pagination
+     */
+    public function getAllWithFilters(array $filters = [], int $perPage = 10)
+    {
+        $query = Reservation::with(['user', 'room'])
+            ->orderBy('date', 'desc')
+            ->orderBy('start_time', 'asc');
+
+        if (!empty($filters['date'])) {
+            $query->whereDate('date', $filters['date']);
+        }
+
+        if (!empty($filters['day_of_week'])) {
+            $query->where('day_of_week', $filters['day_of_week']);
+        }
+
+        if (!empty($filters['start_time'])) {
+            $query->whereTime('start_time', '>=', $filters['start_time']);
+        }
+
+        if (!empty($filters['end_time'])) {
+            $query->whereTime('end_time', '<=', $filters['end_time']);
+        }
+        
+
+        return $query->paginate($perPage);
+    }
 }
