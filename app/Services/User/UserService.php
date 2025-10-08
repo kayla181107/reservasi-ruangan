@@ -13,6 +13,24 @@ class UserService
         return User::with('roles')->get();
     }
 
+    // Method baru untuk filter + pagination
+    public function getAllFiltered(array $filters = [], $perPage = 10)
+    {
+        $query = User::with('roles');
+
+        if (!empty($filters['role'])) {
+            $query->whereHas('roles', function ($q) use ($filters) {
+                $q->where('name', $filters['role']);
+            });
+        }
+
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', "%{$filters['name']}%");
+        }
+
+        return $query->orderBy('name', 'asc')->paginate($perPage);
+    }
+
     public function find($id)
     {
         return User::with('roles')->findOrFail($id);

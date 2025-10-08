@@ -8,13 +8,19 @@ class FixedScheduleService
 {
     public function getAllFiltered(array $filters = [], $perPage = 10)
     {
-        $query = FixedSchedule::with('room');
+        $query = FixedSchedule::with(['room', 'user']);
 
-        // 🔍 Filter Search
+        // 🔍 Filter Search (nama user, nama ruangan, ID)
         if (!empty($filters['search'])) {
             $searchTerm = strtolower($filters['search']);
-            $query->whereHas('room', function ($q) use ($searchTerm) {
-                $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchTerm}%"]);
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(id) LIKE ?', ["%{$searchTerm}%"])
+                  ->orWhereHas('room', function ($q2) use ($searchTerm) {
+                      $q2->whereRaw('LOWER(name) LIKE ?', ["%{$searchTerm}%"]);
+                  })
+                  ->orWhereHas('user', function ($q3) use ($searchTerm) {
+                      $q3->whereRaw('LOWER(name) LIKE ?', ["%{$searchTerm}%"]);
+                  });
             });
         }
 
@@ -23,12 +29,12 @@ class FixedScheduleService
             $query->where('day_of_week', $filters['day_of_week']);
         }
 
-        // 🕒 Filter Jam Mulai
+        // ⏱ Filter Jam Mulai
         if (!empty($filters['start_time'])) {
             $query->where('start_time', '>=', $filters['start_time']);
         }
 
-        // 🕒 Filter Jam Selesai
+        // ⏱ Filter Jam Selesai
         if (!empty($filters['end_time'])) {
             $query->where('end_time', '<=', $filters['end_time']);
         }
@@ -44,7 +50,7 @@ class FixedScheduleService
 
     public function find($id)
     {
-        return FixedSchedule::with('room')->findOrFail($id);
+        return FixedSchedule::with(['room', 'user'])->findOrFail($id);
     }
 
     public function create(array $data)
