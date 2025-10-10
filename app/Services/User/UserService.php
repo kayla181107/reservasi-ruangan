@@ -7,17 +7,18 @@ use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
+    
     public function getAll()
     {
-        // Ambil semua user dengan role-nya
         return User::with('roles')->get();
     }
 
-    // Method baru untuk filter + pagination
-    public function getAllFiltered(array $filters = [], $perPage = 10)
+    
+    public function getAllFiltered(array $filters = [], ?int $perPage = null, int $page = 1)
     {
         $query = User::with('roles');
 
+        // Filter berdasarkan role
         if (!empty($filters['role'])) {
             $query->whereHas('roles', function ($q) use ($filters) {
                 $q->where('name', $filters['role']);
@@ -25,17 +26,22 @@ class UserService
         }
 
         if (!empty($filters['name'])) {
-            $query->where('name', 'like', "%{$filters['name']}%");
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
         }
 
-        return $query->orderBy('name', 'asc')->paginate($perPage);
+        $perPage = $perPage ?: 10;
+
+        return $query->orderBy('id', 'asc')
+                     ->paginate($perPage, ['*'], 'page', $page);
     }
 
+    
     public function find($id)
     {
-        return User::with('roles')->findOrFail($id);
+        return User::with('roles')->find($id);
     }
 
+   
     public function create(array $data)
     {
         $data['password'] = Hash::make($data['password']);
@@ -51,7 +57,10 @@ class UserService
 
     public function update($id, array $data)
     {
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+        if (!$user) {
+            return null;
+        }
 
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -68,9 +77,16 @@ class UserService
         return $user->load('roles');
     }
 
+  
     public function delete($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+
+        if (!$user) {
+            return false;
+        }
+
         $user->delete();
+        return true;
     }
 }

@@ -19,47 +19,137 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
-    // List semua user dengan filter role, name, dan pagination
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $filters = [
-            'role' => $request->input('role'),
-            'name' => $request->input('name'),
-        ];
+        try {
+            $filters = [
+                'role' => $request->input('role'),
+                'name' => $request->input('name'),
+            ];
 
-        $perPage = $request->input('per_page', 10);
+            $page = $request->input('page', 1);
 
-        $users = $this->userService->getAllFiltered($filters, $perPage);
+            $perPage = $request->input('per_page', 10);
 
-        return UserResource::collection($users);
+            $users = $this->userService->getAllFiltered($filters, $perPage, $page);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data user berhasil diambil',
+                'data' => UserResource::collection($users),
+                'meta' => [
+                    'current_page' => $users->currentPage(),
+                    'per_page' => $users->perPage(),
+                    'total' => $users->total(),
+                    'last_page' => $users->lastPage(),
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Gagal mengambil data user: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
     }
 
-    // Admin membuat user baru (admin/karyawan)
-    public function store(StoreUserRequest $request)
+    public function store(StoreUserRequest $request): JsonResponse
     {
-        $user = $this->userService->create($request->validated());
-        return (new UserResource($user))
-            ->additional(['message' => 'User created successfully']);
+        try {
+            $user = $this->userService->create($request->validated());
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'User berhasil dibuat',
+                'data' => new UserResource($user)
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Gagal membuat user: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
     }
 
-    // Detail user
-    public function show($id)
+    public function show($id): JsonResponse
     {
-        return new UserResource($this->userService->find($id));
+        try {
+            $user = $this->userService->find($id);
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'failed',
+                    'message' => 'User tidak ditemukan',
+                    'data' => null
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Detail user berhasil diambil',
+                'data' => new UserResource($user)
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Gagal menampilkan detail user: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
     }
 
-    // Admin update data user atau ubah role (misalnya karyawan → admin)
-    public function update(UpdateUserRequest $request, $id)
+    public function update(UpdateUserRequest $request, $id): JsonResponse
     {
-        $user = $this->userService->update($id, $request->validated());
-        return (new UserResource($user))
-            ->additional(['message' => 'User updated successfully']);
+        try {
+            $user = $this->userService->update($id, $request->validated());
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'failed',
+                    'message' => 'User tidak ditemukan untuk diperbarui',
+                    'data' => null
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'User berhasil diperbarui',
+                'data' => new UserResource($user)
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Gagal memperbarui user: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
     }
 
-    // Hapus user
     public function destroy($id): JsonResponse
     {
-        $this->userService->delete($id);
-        return response()->json(['message' => 'User deleted successfully']);
+        try {
+            $deleted = $this->userService->delete($id);
+
+            if (!$deleted) {
+                return response()->json([
+                    'status' => 'failed',
+                    'message' => 'User tidak ditemukan untuk dihapus',
+                    'data' => null
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'User berhasil dihapus',
+                'data' => null
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Gagal menghapus user: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
     }
 }
