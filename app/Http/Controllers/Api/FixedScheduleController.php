@@ -19,14 +19,11 @@ class FixedScheduleController extends Controller
         $this->fixedScheduleService = $fixedScheduleService;
     }
 
-    // ============================================================
-    // INDEX
-    // ============================================================
+    
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        // Ambil filter
         $filters = [
             'day_of_week' => $request->query('day_of_week'),
             'start_time'  => $request->query('start_time'),
@@ -37,12 +34,10 @@ class FixedScheduleController extends Controller
 
         ];
 
-        // Pagination
         $page = (int) max(1, $request->query('page', 1));
         $perPage = (int) $request->query('per_page', 10);
         $perPage = min(max($perPage, 1), 100); // batas aman: 1–100 per halaman
 
-        // VALIDASI INPUT
         $validDays = ['senin','selasa','rabu','kamis','jumat','sabtu','minggu'];
         if (!empty($filters['day_of_week']) && !in_array(strtolower(trim($filters['day_of_week'])), $validDays)) {
             return response()->json([
@@ -85,7 +80,6 @@ class FixedScheduleController extends Controller
             ], 400);
         }
 
-        // QUERY + PAGINATION + SEARCH
         try {
             $query = $this->fixedScheduleService->query()
                 ->with(['user', 'room']);
@@ -140,7 +134,6 @@ class FixedScheduleController extends Controller
                 ], 200);
             }
 
-            // Mapping ke resource
             $data = $collectionWithNo->map(function ($item) use ($user, $request) {
                 if ($user->hasRole('admin')) {
                     $arr = (new AdminResource($item))->toArray($request);
@@ -151,8 +144,7 @@ class FixedScheduleController extends Controller
                 return $arr;
             })->values();
 
-            // Response sukses
-            return response()->json([
+             return response()->json([
                 'status'  => 'success',
                 'message' => 'Data jadwal tetap berhasil ditampilkan.',
                 'data'    => $data,
@@ -173,7 +165,6 @@ class FixedScheduleController extends Controller
         }
     }
 
-    // SHOW
     public function show($id)
     {
         try {
@@ -207,7 +198,6 @@ class FixedScheduleController extends Controller
     }
 
     
-    // STORE
     public function store(FixedScheduleRequest $request)
     {
         $user = Auth::user();
@@ -240,7 +230,6 @@ class FixedScheduleController extends Controller
         }
     }
 
-    // UPDATE
     public function update(FixedScheduleRequest $request, $id)
     {
         $user = Auth::user();
@@ -281,7 +270,6 @@ class FixedScheduleController extends Controller
         }
     }
 
-    // DESTROY
     public function destroy($id)
     {
         $user = Auth::user();

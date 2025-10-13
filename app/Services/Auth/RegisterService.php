@@ -21,7 +21,6 @@ $user->role = 'karyawan';
 $user->save();
 
 
-        // Buat token login
         $token = $user->createToken('TokenLogin')->accessToken;
 
         return [

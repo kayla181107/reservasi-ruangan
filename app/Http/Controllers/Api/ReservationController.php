@@ -7,20 +7,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
-
-// Services
 use App\Services\Admin\ReservationService as AdminReservationService;
 use App\Services\Karyawan\ReservationService as KaryawanReservationService;
-
-// Requests
 use App\Http\Requests\Karyawan\ReservationStoreRequest;
 use App\Http\Requests\Karyawan\ReservationCancelRequest;
-
-// Resources
 use App\Http\Resources\Admin\ReservationResource as AdminReservationResource;
 use App\Http\Resources\Karyawan\ReservationResource as KaryawanReservationResource;
-
-// Mail
 use App\Mail\ReservationCanceledByUserMail;
 
 class ReservationController extends Controller
@@ -36,7 +28,6 @@ class ReservationController extends Controller
         $this->karyawanService = $karyawanService;
     }
 
-    // INDEX (GET /reservations)
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -47,7 +38,6 @@ class ReservationController extends Controller
             ], 401);
         }
 
-        // Filter
         $filters = [
             'date'        => $request->query('date'),
             'day_of_week' => $request->query('day_of_week'),
@@ -58,12 +48,10 @@ class ReservationController extends Controller
 
         ];
 
-        // Pagination 
         $page = (int) max(1, $request->query('page', 1));
-        $perPage = (int) $request->query('per_page', 10); // ← bisa diatur dari frontend bebas
-        $perPage = min(max(1, $perPage), 100); // minimal 1, maksimal 100 per halaman
+        $perPage = (int) $request->query('per_page', 10); 
+        $perPage = min(max(1, $perPage), 100); 
 
-        // VALIDASI INPUT
         if (!empty($filters['day_of_week'])) {
             $validDays = ['senin','selasa','rabu','kamis','jumat','sabtu','minggu'];
             if (!in_array(strtolower(trim($filters['day_of_week'])), $validDays)) {
@@ -127,7 +115,6 @@ class ReservationController extends Controller
             ], 400);
         }
 
-        // QUERY + PAGINATION
         try {
             $query = \App\Models\Reservation::query()
                 ->when($user->hasRole('karyawan'), fn($q) => $q->where('user_id', $user->id))
@@ -181,7 +168,6 @@ class ReservationController extends Controller
         }
     }
 
-    // SHOW
     public function show($id)
     {
         $user = Auth::user();
@@ -220,7 +206,6 @@ class ReservationController extends Controller
         }
     }
 
-    // STORE
     public function store(ReservationStoreRequest $request)
     {
         $user = Auth::user();
@@ -259,7 +244,6 @@ class ReservationController extends Controller
         }
     }
 
-    // APPROVE
     public function approve(Request $request, $id)
     {
         $user = Auth::user();
@@ -290,7 +274,6 @@ class ReservationController extends Controller
         }
     }
 
-    // REJECTED
     public function rejected(Request $request, $id)
     {
         $user = Auth::user();
@@ -332,7 +315,6 @@ class ReservationController extends Controller
         }
     }
 
-    // DESTROY
     public function destroy($id)
     {
         $user = Auth::user();
@@ -358,7 +340,6 @@ class ReservationController extends Controller
         }
     }
 
-    // CANCEL
     public function cancel(ReservationCancelRequest $request, $id)
     {
         $user = Auth::user();

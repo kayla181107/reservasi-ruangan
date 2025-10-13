@@ -13,9 +13,7 @@ use App\Http\Controllers\Api\DashboardController;
 
 
 /**
- * ===============================
  * AUTH ROUTES (Public)
- * ===============================
  */
 Route::post('/login', [LoginController::class, 'login'])->name('auth.login');
 Route::post('/register', [RegisterController::class, 'register'])->name('auth.register');
@@ -27,9 +25,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [LogoutController::class, 'logout'])->name('auth.logout');
 
     /**
-     * ===============================
      * ROUTE YANG BISA DIAKSES ADMIN & KARYAWAN
-     * ===============================
      */
     Route::middleware('role:admin|karyawan')->group(function () {
         // Rooms
@@ -46,9 +42,7 @@ Route::middleware('auth:api')->group(function () {
     });
  
     /**
-     * ===============================
      * ADMIN ROUTES
-     * ===============================
      */
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         // Rooms
@@ -75,12 +69,9 @@ Route::middleware('auth:api')->group(function () {
     });
 
     /**
-     * ===============================
      * KARYAWAN ROUTES
-     * ===============================
      */
     Route::middleware('role:karyawan')->prefix('karyawan')->group(function () {
-        // Reservations (buat & cancel)
         Route::post('reservations', [ReservationController::class, 'store'])->name('reservations.create');
         Route::put('reservations/{id}/cancel', [ReservationController::class, 'cancel'])->name('reservations.cancel');
     });

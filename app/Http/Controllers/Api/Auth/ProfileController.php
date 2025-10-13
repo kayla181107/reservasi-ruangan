@@ -27,7 +27,6 @@ class ProfileController extends Controller
             'password_confirmation' => ['nullable', 'min:6'],
         ]);
 
-        // Kalau user isi password baru, maka pastikan current_password juga diisi
         if (!empty($validated['password'])) {
             if (empty($validated['current_password'])) {
                 return response()->json([

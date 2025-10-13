@@ -8,7 +8,7 @@ class RoomRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // sebaiknya diatur dengan policy/role check (misalnya admin-only)
+        return true; 
     }
 
     public function rules(): array

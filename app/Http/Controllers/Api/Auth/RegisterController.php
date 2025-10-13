@@ -22,7 +22,6 @@ class RegisterController extends Controller
 
         $result = $this->registerService->register($validated);
 
-        // Optionally, you can return a response or token
         return new RegisterResource($result);
 
     }

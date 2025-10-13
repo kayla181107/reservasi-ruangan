@@ -31,7 +31,7 @@ class RoomController extends Controller
 
             $pagination = [
                 'page' => $request->query('page', 1),
-                'per_page' => $request->query('per_page', 10), // ✅ tambahkan per_page
+                'per_page' => $request->query('per_page', 10), 
             ];
 
             if (!is_numeric($pagination['page'])) {

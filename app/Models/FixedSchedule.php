@@ -28,19 +28,16 @@ class FixedSchedule extends Model
         'end_time'   => 'string',     
     ];
 
-    // Relasi ke Room
     public function room()
     {
         return $this->belongsTo(Room::class);
     }
 
-    // Relasi ke User
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke Reservations
     public function reservations()
     {
         return $this->hasMany(Reservation::class);

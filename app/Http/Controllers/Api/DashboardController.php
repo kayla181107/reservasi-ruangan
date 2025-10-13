@@ -19,7 +19,7 @@ class DashboardController extends Controller
             'fixedSchedules' => FixedSchedule::count(),
             'chart' => [
                 'labels' => ['Jan','Feb','Mar','Apr','May','Jun'],
-                'data'   => [5, 10, 8, 15, 12, 20], // contoh dummy dulu
+                'data'   => [5, 10, 8, 15, 12, 20], 
             ]
         ]);
     }
