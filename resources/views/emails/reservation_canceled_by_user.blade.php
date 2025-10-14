@@ -8,7 +8,7 @@
 <body style="font-family: Arial, sans-serif; line-height:1.6; color:#333;">
     <h2>Halo Admin 👋</h2>
 
-    <p>Seorang user telah <strong style="color:red;">Membatalkan</strong> reservasi dengan detail berikut:</p>
+    <p>User telah <strong style="color:red;">Membatalkan</strong> reservasi dengan detail berikut:</p>
 
     <ul style="list-style:none; padding:0; margin:0;">
         <li><strong>👤 User:</strong> {{ $reservation->user->name }} ({{ $reservation->user->email }})</li>
