@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use App\Models\Reservation;
 use Carbon\Carbon;
 use App\Services\Admin\ReservationService as AdminReservationService;
 use App\Services\Karyawan\ReservationService as KaryawanReservationService;
@@ -25,10 +26,44 @@ class ReservationController extends Controller
     protected $adminService;
     protected $karyawanService;
 
-    public function exportExcel()
-    {
-        return Excel::download(new ReservationExport, 'data_reservasi.xlsx');
+    public function exportExcel(Request $request)
+{
+    try {
+        $user = Auth::user();
+
+        // Admin bisa export semua, karyawan hanya miliknya sendiri
+        $query = Reservation::query()
+            ->when($user->hasRole('karyawan'), fn($q) => $q->where('user_id', $user->id));
+
+        // filter tanggal (periode)
+        $startDate = $request->query('start_date', now()->startOfYear()->toDateString());
+        $endDate   = $request->query('end_date', now()->endOfYear()->toDateString());
+
+        // ✅ ganti 'tanggal' jadi 'date'
+        $query->whereBetween('date', [$startDate, $endDate]);
+
+        // ambil semua data
+        $data = $query->with(['user', 'room'])->get();
+
+        if ($data->isEmpty()) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Tidak ada data reservasi pada periode tersebut.',
+            ], 404);
+        }
+
+        $fileName = 'laporan_reservasi_' . $startDate . '_sampai_' . $endDate . '.xlsx';
+
+        return Excel::download(new ReservationExport($startDate, $endDate), $fileName);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status'  => 'failed',
+            'message' => 'Terjadi kesalahan server: ' . $e->getMessage(),
+        ], 500);
     }
+}
+
+
 
     public function __construct(
         AdminReservationService $adminService,
@@ -126,7 +161,7 @@ class ReservationController extends Controller
         }
 
         try {
-            $query = \App\Models\Reservation::query()
+            $query = Reservation::query()
                 ->when($user->hasRole('karyawan'), fn($q) => $q->where('user_id', $user->id))
                 ->orderBy('id', 'asc');
 
@@ -220,7 +255,7 @@ class ReservationController extends Controller
         $user = auth()->user();
 
         try {
-            $reservation = \App\Models\Reservation::findOrFail($id);
+            $reservation = Reservation::findOrFail($id);
 
             if ($user->hasRole('karyawan') && $reservation->user_id !== $user->id) {
                 return response()->json([

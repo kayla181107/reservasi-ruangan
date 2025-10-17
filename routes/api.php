@@ -17,7 +17,7 @@ Route::post('/login', [LoginController::class, 'login'])->name('auth.login');
 Route::post('/register', [RegisterController::class, 'register'])->name('auth.register');
 
 Route::middleware('auth:api')->group(function () {
-    
+
     // Profile
     Route::get('/profile', [ProfileController::class, 'profile'])->name('profile.detail');
     Route::put('/profile', [ProfileController::class, 'updateProfile'])->name('profile.update');
@@ -62,11 +62,11 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.delete');
 
         // Reservations 
+        Route::get('reservations/export/excel', [ReservationController::class, 'exportExcel'])
+            ->name('reservations.export.excel');
         Route::put('reservations/{id}/approve', [ReservationController::class, 'approve'])->name('reservations.approve');
         Route::put('reservations/{id}/rejected', [ReservationController::class, 'rejected'])->name('reservations.rejected');
         Route::delete('reservations/{id}', [ReservationController::class, 'destroy'])->name('reservations.delete');
-        Route::get('/reservations/export', [ReservationController::class, 'exportExcel']);
-
     });
 
     // KARYAWAN ROUTES
