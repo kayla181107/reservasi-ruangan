@@ -34,6 +34,14 @@ class Reservation extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function logs()
+    {
+
+    return $this->hasMany(ReservationLog::class, 'reservation_id');
+    
+    }
+
+
     public function room()
     {
         return $this->belongsTo(Room::class);

@@ -14,17 +14,27 @@ use App\Http\Requests\Karyawan\ReservationCancelRequest;
 use App\Http\Resources\Admin\ReservationResource as AdminReservationResource;
 use App\Http\Resources\Karyawan\ReservationResource as KaryawanReservationResource;
 use App\Mail\ReservationCanceledByUserMail;
+use App\Http\Resources\ReservationLogResource;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ReservationExport;
+
+
 
 class ReservationController extends Controller
 {
     protected $adminService;
     protected $karyawanService;
 
+    public function exportExcel()
+    {
+        return Excel::download(new ReservationExport, 'data_reservasi.xlsx');
+    }
+
     public function __construct(
         AdminReservationService $adminService,
         KaryawanReservationService $karyawanService
     ) {
-        $this->adminService    = $adminService;
+        $this->adminService = $adminService;
         $this->karyawanService = $karyawanService;
     }
 
@@ -39,26 +49,26 @@ class ReservationController extends Controller
         }
 
         $filters = [
-            'date'        => $request->query('date'),
+            'date' => $request->query('date'),
             'day_of_week' => $request->query('day_of_week'),
-            'start_time'  => $request->query('start_time'),
-            'end_time'    => $request->query('end_time'),
-            'status'      => $request->query('status'),
-            'per_page'      => $request->query('per_page', 10),
+            'start_time' => $request->query('start_time'),
+            'end_time' => $request->query('end_time'),
+            'status' => $request->query('status'),
+            'per_page' => $request->query('per_page', 10),
 
         ];
 
         $page = (int) max(1, $request->query('page', 1));
-        $perPage = (int) $request->query('per_page', 10); 
-        $perPage = min(max(1, $perPage), 100); 
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = min(max(1, $perPage), 100);
 
         if (!empty($filters['day_of_week'])) {
-            $validDays = ['senin','selasa','rabu','kamis','jumat','sabtu','minggu'];
+            $validDays = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
             if (!in_array(strtolower(trim($filters['day_of_week'])), $validDays)) {
                 return response()->json([
-                    'status'  => 'failed',
+                    'status' => 'failed',
                     'message' => 'Hari tidak valid. Gunakan Senin hingga Minggu.',
-                    'data'    => null
+                    'data' => null
                 ], 400);
             }
         }
@@ -67,9 +77,9 @@ class ReservationController extends Controller
             $validStatus = ['approved', 'rejected', 'pending'];
             if (!in_array(strtolower(trim($filters['status'])), $validStatus)) {
                 return response()->json([
-                    'status'  => 'failed',
+                    'status' => 'failed',
                     'message' => 'Status tidak valid. Gunakan approved, rejected, atau pending.',
-                    'data'    => null
+                    'data' => null
                 ], 400);
             }
         }
@@ -82,9 +92,9 @@ class ReservationController extends Controller
                 }
             } catch (\Throwable $e) {
                 return response()->json([
-                    'status'  => 'failed',
+                    'status' => 'failed',
                     'message' => 'Format tanggal tidak valid. Gunakan format YYYY-MM-DD.',
-                    'data'    => null
+                    'data' => null
                 ], 400);
             }
         }
@@ -93,32 +103,32 @@ class ReservationController extends Controller
         if (!empty($filters['start_time'])) {
             if (!preg_match($timeRegex, $filters['start_time'])) {
                 return response()->json([
-                    'status'  => 'failed',
+                    'status' => 'failed',
                     'message' => 'Format jam mulai tidak valid. Gunakan format HH:MM.',
-                    'data'    => null
+                    'data' => null
                 ], 400);
             }
             if (empty($filters['end_time'])) {
                 return response()->json([
-                    'status'  => 'failed',
+                    'status' => 'failed',
                     'message' => 'Waktu selesai wajib diisi jika waktu mulai diisi.',
-                    'data'    => null
+                    'data' => null
                 ], 400);
             }
         }
 
         if (!empty($filters['end_time']) && !preg_match($timeRegex, $filters['end_time'])) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Format jam selesai tidak valid. Gunakan format HH:MM.',
-                'data'    => null
+                'data' => null
             ], 400);
         }
 
         try {
             $query = \App\Models\Reservation::query()
                 ->when($user->hasRole('karyawan'), fn($q) => $q->where('user_id', $user->id))
-                ->orderBy('id', 'asc'); // ← data urut dari ID terkecil ke terbesar
+                ->orderBy('id', 'asc');
 
             $query
                 ->when($filters['date'], fn($q) => $q->whereDate('date', $filters['date']))
@@ -131,10 +141,10 @@ class ReservationController extends Controller
 
             if ($reservations->isEmpty()) {
                 return response()->json([
-                    'status'  => 'success',
+                    'status' => 'success',
                     'message' => 'Tidak ada data reservasi ditemukan.',
-                    'data'    => [],
-                    'meta'    => [
+                    'data' => [],
+                    'meta' => [
                         'current_page' => $page,
                         'per_page' => $perPage,
                         'total' => 0,
@@ -148,22 +158,22 @@ class ReservationController extends Controller
                 : KaryawanReservationResource::collection($reservations);
 
             return response()->json([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Data reservasi berhasil ditampilkan.',
-                'data'    => $resource,
-                'meta'    => [
+                'data' => $resource,
+                'meta' => [
                     'current_page' => $reservations->currentPage(),
-                    'per_page'     => $reservations->perPage(),
-                    'total'        => $reservations->total(),
-                    'last_page'    => $reservations->lastPage(),
+                    'per_page' => $reservations->perPage(),
+                    'total' => $reservations->total(),
+                    'last_page' => $reservations->lastPage(),
                 ],
             ], 200);
 
         } catch (\Throwable $th) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Terjadi kesalahan server: ' . $th->getMessage(),
-                'data'    => null
+                'data' => null
             ], 500);
         }
     }
@@ -176,35 +186,70 @@ class ReservationController extends Controller
             if ($user->hasRole('admin')) {
                 $reservation = $this->adminService->getById($id);
                 return response()->json([
-                    'status'  => 'success',
+                    'status' => 'success',
                     'message' => 'Detail reservasi berhasil ditampilkan.',
-                    'data'    => new AdminReservationResource($reservation),
+                    'data' => new AdminReservationResource($reservation),
                 ], 200);
             }
 
             if ($user->hasRole('karyawan')) {
                 $reservation = $this->karyawanService->getUserReservationById($user->id, $id);
                 return response()->json([
-                    'status'  => 'success',
+                    'status' => 'success',
                     'message' => 'Detail reservasi berhasil ditampilkan.',
-                    'data'    => new KaryawanReservationResource($reservation),
+                    'data' => new KaryawanReservationResource($reservation),
                 ], 200);
             }
 
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Akses tidak diizinkan.',
-                'data'    => null,
+                'data' => null,
             ], 403);
 
         } catch (\Throwable $th) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Reservasi tidak ditemukan atau terjadi kesalahan.',
-                'data'    => null,
+                'data' => null,
             ], 404);
         }
     }
+    public function logs($id)
+    {
+        $user = auth()->user();
+
+        try {
+            $reservation = \App\Models\Reservation::findOrFail($id);
+
+            if ($user->hasRole('karyawan') && $reservation->user_id !== $user->id) {
+                return response()->json([
+                    'status' => 'failed',
+                    'message' => 'Anda tidak memiliki akses ke log reservasi ini.',
+                    'data' => null,
+                ], 403);
+            }
+
+            $logs = \App\Models\ReservationLog::where('reservation_id', $reservation->id)
+                ->with('user')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Log reservasi berhasil ditampilkan.',
+                'data' => ReservationLogResource::collection($logs),
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Gagal mengambil log reservasi: ' . $th->getMessage(),
+                'data' => null,
+            ], 500);
+        }
+    }
+
 
     public function store(ReservationStoreRequest $request)
     {
@@ -212,34 +257,34 @@ class ReservationController extends Controller
 
         if (!$user->hasRole('karyawan')) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Hanya karyawan yang dapat membuat reservasi.',
-                'data'    => null,
+                'data' => null,
             ], 403);
         }
 
         try {
             $reservation = $this->karyawanService->create([
-                'user_id'     => $user->id,
-                'room_id'     => $request->room_id,
-                'date'        => $request->date,
+                'user_id' => $user->id,
+                'room_id' => $request->room_id,
+                'date' => $request->date,
                 'day_of_week' => Carbon::parse($request->date)->dayName,
-                'start_time'  => $request->start_time,
-                'end_time'    => $request->end_time,
-                'reason'      => $request->reason ?? '-',
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'reason' => $request->reason ?? '-',
             ]);
 
             return response()->json([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Reservasi berhasil dibuat.',
-                'data'    => new KaryawanReservationResource($reservation),
+                'data' => new KaryawanReservationResource($reservation),
             ], 201);
 
         } catch (\Throwable $th) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Gagal membuat reservasi: ' . $th->getMessage(),
-                'data'    => null,
+                'data' => null,
             ], 500);
         }
     }
@@ -249,7 +294,7 @@ class ReservationController extends Controller
         $user = Auth::user();
         if (!$user->hasRole('admin')) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Hanya admin yang dapat menyetujui reservasi.',
             ], 403);
         }
@@ -261,14 +306,14 @@ class ReservationController extends Controller
             ]);
 
             return response()->json([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Reservasi berhasil disetujui.',
-                'data'    => new AdminReservationResource($reservation),
+                'data' => new AdminReservationResource($reservation),
             ], 200);
 
         } catch (\Throwable $th) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Gagal menyetujui reservasi: ' . $th->getMessage(),
             ], 500);
         }
@@ -279,7 +324,7 @@ class ReservationController extends Controller
         $user = Auth::user();
         if (!$user->hasRole('admin')) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Hanya admin yang dapat menolak reservasi.',
             ], 403);
         }
@@ -299,9 +344,9 @@ class ReservationController extends Controller
             ]);
 
             return response()->json([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Reservasi berhasil ditolak dengan alasan.',
-                'data'    => [
+                'data' => [
                     'reservation' => new AdminReservationResource($reservation),
                     'reason' => $request->reason,
                 ],
@@ -309,7 +354,7 @@ class ReservationController extends Controller
 
         } catch (\Throwable $th) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Gagal menolak reservasi: ' . $th->getMessage(),
             ], 500);
         }
@@ -320,7 +365,7 @@ class ReservationController extends Controller
         $user = Auth::user();
         if (!$user->hasRole('admin')) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Hanya admin yang dapat menghapus reservasi.',
             ], 403);
         }
@@ -328,13 +373,13 @@ class ReservationController extends Controller
         try {
             $this->adminService->delete($id);
             return response()->json([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Reservasi berhasil dihapus.',
             ], 200);
 
         } catch (\Throwable $th) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Gagal menghapus reservasi: ' . $th->getMessage(),
             ], 500);
         }
@@ -345,7 +390,7 @@ class ReservationController extends Controller
         $user = Auth::user();
         if (!$user->hasRole('karyawan')) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Hanya karyawan yang dapat membatalkan reservasi.',
             ], 403);
         }
@@ -360,14 +405,14 @@ class ReservationController extends Controller
             Mail::to('admin@reservasi.com')->send(new ReservationCanceledByUserMail($reservation));
 
             return response()->json([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Reservasi berhasil dibatalkan.',
-                'data'    => new KaryawanReservationResource($reservation),
+                'data' => new KaryawanReservationResource($reservation),
             ], 200);
 
         } catch (\Throwable $th) {
             return response()->json([
-                'status'  => 'failed',
+                'status' => 'failed',
                 'message' => 'Gagal membatalkan reservasi: ' . $th->getMessage(),
             ], 500);
         }
