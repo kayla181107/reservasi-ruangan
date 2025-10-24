@@ -39,7 +39,6 @@ class ReservationController extends Controller
         $startDate = $request->query('start_date', now()->startOfYear()->toDateString());
         $endDate   = $request->query('end_date', now()->endOfYear()->toDateString());
 
-        // ✅ ganti 'tanggal' jadi 'date'
         $query->whereBetween('date', [$startDate, $endDate]);
 
         // ambil semua data
@@ -95,7 +94,8 @@ class ReservationController extends Controller
 
         $page = (int) max(1, $request->query('page', 1));
         $perPage = (int) $request->query('per_page', 10);
-        $perPage = min(max(1, $perPage), 100);
+        $perPage = min(max(1, $perPage), 9999);
+
 
         if (!empty($filters['day_of_week'])) {
             $validDays = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
