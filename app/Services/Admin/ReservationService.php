@@ -19,6 +19,20 @@ class ReservationService
     {
         $reservation = Reservation::with(['user', 'room'])->findOrFail($id);
 
+        // 🚫 Cegah ubah status jika tanggal reservasi sudah lewat
+        if (now()->toDateString() > $reservation->date) {
+            throw ValidationException::withMessages([
+                'date' => 'Tidak dapat mengubah status. Reservasi sudah melewati tanggal yang ditentukan.'
+            ]);
+        }
+
+        // 🚫 Jika tanggal sama dengan hari ini, tapi waktu reservasi sudah berakhir
+        if (now()->toDateString() === $reservation->date && now()->format('H:i:s') > $reservation->end_time) {
+            throw ValidationException::withMessages([
+                'time' => 'Tidak dapat mengubah status. Waktu reservasi sudah berakhir hari ini.'
+            ]);
+        }
+
         if (!in_array($data['status'], ['approved', 'rejected', 'pending'])) {
             throw ValidationException::withMessages([
                 'status' => 'Status reservasi tidak valid.'

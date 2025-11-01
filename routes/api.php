@@ -24,44 +24,38 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [LogoutController::class, 'logout'])->name('auth.logout');
 
 
-    // ROUTE YANG BISA DIAKSES ADMIN & KARYAWAN
+    // BISA DIAKSES ADMIN & KARYAWAN
 
     Route::middleware('role:admin|karyawan')->group(function () {
 
-        // Rooms
         Route::get('rooms', [RoomController::class, 'index'])->name('rooms.list');
         Route::get('rooms/{id}', [RoomController::class, 'show'])->name('rooms.detail');
 
-        // Fixed Schedules
         Route::get('fixed-schedules', [FixedScheduleController::class, 'index'])->name('fixed-schedules.list');
         Route::get('fixed-schedules/{schedule}', [FixedScheduleController::class, 'show'])->name('fixed-schedules.detail');
 
-        // Reservations
         Route::get('reservations', [ReservationController::class, 'index'])->name('reservations.list');
         Route::get('reservations/{id}', [ReservationController::class, 'show'])->name('reservations.detail');
     });
-
-    // ADMIN ROUTES
+ 
+    // ADMIN 
     Route::middleware('role:admin')->prefix('admin')->group(function () {
 
-        // Rooms
         Route::post('rooms', [RoomController::class, 'store'])->name('rooms.create');
         Route::put('rooms/{id}', [RoomController::class, 'update'])->name('rooms.update');
         Route::delete('rooms/{id}', [RoomController::class, 'destroy'])->name('rooms.delete');
 
-        // Fixed Schedules
         Route::post('fixed-schedules', [FixedScheduleController::class, 'store'])->name('fixed-schedules.create');
         Route::put('fixed-schedules/{schedule}', [FixedScheduleController::class, 'update'])->name('fixed-schedules.update');
         Route::delete('fixed-schedules/{schedule}', [FixedScheduleController::class, 'destroy'])->name('fixed-schedules.delete');
 
-        // Users
         Route::get('users', [UserController::class, 'index'])->name('users.list');
         Route::get('users/{id}', [UserController::class, 'show'])->name('users.detail');
         Route::post('users', [UserController::class, 'store'])->name('users.create');
         Route::put('users/{id}', [UserController::class, 'update'])->name('users.update');
         Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.delete');
 
-        // Reservations 
+         
         Route::get('reservations/export/excel', [ReservationController::class, 'exportExcel'])
             ->name('reservations.export.excel');
         Route::put('reservations/{id}/approve', [ReservationController::class, 'approve'])->name('reservations.approve');
@@ -69,7 +63,7 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('reservations/{id}', [ReservationController::class, 'destroy'])->name('reservations.delete');
     });
 
-    // KARYAWAN ROUTES
+    // KARYAWAN 
     Route::middleware('role:karyawan')->prefix('karyawan')->group(function () {
         Route::post('reservations', [ReservationController::class, 'store'])->name('reservations.create');
         Route::put('reservations/{id}/cancel', [ReservationController::class, 'cancel'])->name('reservations.cancel');
@@ -88,7 +82,6 @@ Route::middleware('auth:api')->group(function () {
     });
 
 
-    // Handle OPTIONS requests (CORS preflight)
     Route::options('{any}', function () {
         return response()->json([], 200);
     })->where('any', '.*');
