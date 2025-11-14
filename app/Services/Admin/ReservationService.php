@@ -57,10 +57,8 @@ class ReservationService
 
         // ====== Jika disetujui (APPROVED) ======
         if ($data['status'] === 'approved') {
-            // Update status room agar aktif
-            if ($reservation->room) {
-                $reservation->room->update(['status' => 'active']);
-            }
+            // 🕒 Jangan aktifkan ruangan langsung
+            // Ruangan akan otomatis aktif saat waktu reservasi tiba lewat command UpdateRoomStatus
 
             // Kirim email ke user
             if ($reservation->user && $reservation->user->email) {

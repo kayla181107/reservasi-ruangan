@@ -29,7 +29,7 @@ class UpdateUserRequest extends FormRequest
                 'email',
                 Rule::unique('users')->ignore(request()->route('id')),
             ],
-            'password' => 'sometimes|string|min:6|confirmed',
+            'password' => 'sometimes|string|min:6',
             'role' => 'sometimes|string|exists:roles,name',
         ];
     }

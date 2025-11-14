@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 use App\Models\Room;
+use App\Models\ReservationLog;
 use Carbon\Carbon;
 
 class Reservation extends Model
@@ -16,7 +17,7 @@ class Reservation extends Model
         'user_id',
         'room_id',
         'date',
-        'day_of_week',   
+        'day_of_week',
         'start_time',
         'end_time',
         'status',
@@ -24,47 +25,47 @@ class Reservation extends Model
     ];
 
     protected $casts = [
-        'date'       => 'date:Y-m-d', 
-        'start_time' => 'string',     
-        'end_time'   => 'string',     
+        'date'       => 'date:Y-m-d',
+        'start_time' => 'string',
+        'end_time'   => 'string',
     ];
+
+    public $timestamps = true;
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function logs()
-    {
-
-    return $this->hasMany(ReservationLog::class, 'reservation_id');
     
-    }
-
-
     public function room()
     {
-        return $this->belongsTo(Room::class);
+        return $this->belongsTo(Room::class, 'room_id');
     }
 
+    
+    public function logs()
+    {
+        return $this->hasMany(ReservationLog::class, 'reservation_id');
+    }
+
+    
     public function setDateAttribute($value)
     {
         $this->attributes['date'] = $value;
 
-        $carbon = Carbon::parse($value)->locale('en'); 
-        $this->attributes['day_of_week'] = ucfirst($carbon->dayName); 
+        $carbon = Carbon::parse($value)->locale('en');
+        $this->attributes['day_of_week'] = ucfirst($carbon->dayName);
     }
 
-    /**
-     * Scope untuk mencari overlapping reservation
-     */
+   
     public function scopeOverlapping($query, $roomId, $start, $end)
     {
         $start = Carbon::parse($start)->format('H:i');
         $end   = Carbon::parse($end)->format('H:i');
 
         return $query->where('room_id', $roomId)
-            ->whereIn('status', ['pending', 'approved', 'rejected', 'canceled'])
+            ->whereIn('status', ['pending', 'approved']) 
             ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('start_time', [$start, $end])
                   ->orWhereBetween('end_time', [$start, $end])

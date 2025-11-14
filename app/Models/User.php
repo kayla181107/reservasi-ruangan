@@ -14,7 +14,7 @@ class User extends Authenticatable implements OAuthenticatable
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $guard_name = 'api';
-    
+
     protected $fillable = [
         'name',
         'email',
@@ -23,8 +23,6 @@ class User extends Authenticatable implements OAuthenticatable
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
      * @var list<string>
      */
     protected $hidden = [
@@ -33,8 +31,6 @@ class User extends Authenticatable implements OAuthenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
      * @return array<string, string>
      */
     protected function casts(): array
@@ -45,9 +41,23 @@ class User extends Authenticatable implements OAuthenticatable
         ];
     }
 
+    
     public function reservations()
-{
-    return $this->hasMany(Reservation::class);
-}
+    {
+        return $this->hasMany(Reservation::class);
+    }
 
+    
+    public function reservationLogs()
+    {
+        return $this->hasMany(ReservationLog::class);
+    }
+
+    
+    public function rooms()
+    {
+        return $this->belongsToMany(Room::class, 'reservations')
+                    ->withPivot(['date', 'start_time', 'end_time', 'status'])
+                    ->withTimestamps();
+    }
 }

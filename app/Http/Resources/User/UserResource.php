@@ -12,7 +12,7 @@ class UserResource extends JsonResource
             'id'    => $this->id,
             'name'  => $this->name,
             'email' => $this->email,
-            'roles' => $this->whenLoaded('roles', fn () => $this->roles->pluck('name')),
+            'role'  => $this->whenLoaded('roles', fn () => $this->roles->first()->name ?? null),
         ];
     }
 }

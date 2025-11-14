@@ -9,6 +9,7 @@ use App\Http\Resources\User\UserResource;
 use App\Services\User\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Spatie\Permission\Models\Role; 
 
 class UserController extends Controller
 {
@@ -28,7 +29,6 @@ class UserController extends Controller
             ];
 
             $page = $request->input('page', 1);
-
             $perPage = $request->input('per_page', 10);
 
             $users = $this->userService->getAllFiltered($filters, $perPage, $page);
@@ -148,6 +148,25 @@ class UserController extends Controller
             return response()->json([
                 'status' => 'failed',
                 'message' => 'Gagal menghapus user: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
+    }
+
+    public function getRoles(): JsonResponse
+    {
+        try {
+            $roles = Role::select('id', 'name')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Daftar role berhasil diambil',
+                'data' => $roles
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Gagal mengambil role: ' . $e->getMessage(),
                 'data' => null
             ], 500);
         }

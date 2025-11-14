@@ -14,19 +14,28 @@ class Room extends Model
         'name',
         'capacity',
         'description',
-        'status', 
+        'status',
     ];
 
+    /**
+     * Relasi ke tabel reservations
+     */
     public function reservations()
     {
         return $this->hasMany(Reservation::class);
     }
 
+    /**
+     * Relasi ke tabel fixed_schedules
+     */
     public function fixedSchedules()
     {
         return $this->hasMany(FixedSchedule::class);
     }
 
+    /**
+     * Relasi ke user melalui reservations (many to many)
+     */
     public function users()
     {
         return $this->belongsToMany(User::class, 'reservations')
@@ -35,9 +44,8 @@ class Room extends Model
     }
 
     /**
-     * Accessor status_aktual (real-time).
-     * Akan bernilai "active" jika ada reservasi approved
-     * di tanggal & jam sekarang.
+     * Accessor status_aktual (real-time)
+     * Bernilai "active" jika ada reservasi approved pada jam & tanggal sekarang.
      */
     public function getStatusAktualAttribute()
     {
@@ -53,5 +61,22 @@ class Room extends Model
             ->exists();
 
         return $adaReservasi ? 'active' : 'inactive';
+    }
+
+    /**
+     * Scope untuk filter ruangan berdasarkan status aktual
+     */
+    public function scopeAktif($query)
+    {
+        return $query->whereHas('reservations', function ($q) {
+            $now = Carbon::now();
+            $today = $now->toDateString();
+            $timeNow = $now->format('H:i:s');
+
+            $q->where('date', $today)
+              ->where('status', 'approved')
+              ->where('start_time', '<=', $timeNow)
+              ->where('end_time', '>=', $timeNow);
+        });
     }
 }
